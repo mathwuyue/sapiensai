@@ -11,7 +11,11 @@ from alembic import context
 from api.core.config import settings
 from api.db.base_class import Base
 
-from api.models import user
+from api.models import (
+    User, Patient, Checkup, VitalSigns, 
+    Ultrasound, LabResults, PrenatalScreening, 
+    Recommendation
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
