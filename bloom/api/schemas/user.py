@@ -4,16 +4,26 @@ from typing import Optional
 class UserBase(BaseModel):
     email: EmailStr
     username: str
+    is_active: Optional[bool] = True
+    is_superuser: Optional[bool] = False
 
 class UserCreate(UserBase):
     password: str
 
-class User(UserBase):
-    id: int
-    is_active: bool = True
+class UserUpdate(UserBase):
+    password: Optional[str] = None
+
+class UserInDBBase(UserBase):
+    user_id: str
 
     class Config:
         from_attributes = True
+
+class User(UserInDBBase):
+    pass
+
+class UserInDB(UserInDBBase):
+    hashed_password: str
 
 class Token(BaseModel):
     access_token: str
