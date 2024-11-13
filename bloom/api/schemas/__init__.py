@@ -4,6 +4,8 @@ from .checkup import Checkup, CheckupCreate, CheckupUpdate
 from .vital_signs import VitalSigns, VitalSignsCreate, VitalSignsUpdate
 from .ultrasound import Ultrasound, UltrasoundCreate, UltrasoundUpdate
 from .lab_results import LabResults, LabResultsCreate, LabResultsUpdate
+from .prenatal_screening import PrenatalScreening, PrenatalScreeningCreate, PrenatalScreeningUpdate
+from .recommendation import Recommendation, RecommendationCreate, RecommendationUpdate
 
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserInDB",
@@ -12,4 +14,6 @@ __all__ = [
     "VitalSigns", "VitalSignsCreate", "VitalSignsUpdate",
     "Ultrasound", "UltrasoundCreate", "UltrasoundUpdate",
     "LabResults", "LabResultsCreate", "LabResultsUpdate",
+    "PrenatalScreening", "PrenatalScreeningCreate", "PrenatalScreeningUpdate",
+    "Recommendation", "RecommendationCreate", "RecommendationUpdate",
 ] 
