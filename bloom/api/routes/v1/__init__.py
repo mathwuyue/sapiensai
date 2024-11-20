@@ -1,7 +1,13 @@
 from fastapi import APIRouter
-from api.routes.v1 import users, patients, checkups, medical_records
+from api.routes.v1 import auth,users, patients, checkups, medical_records, food
 
 api_router = APIRouter()
+
+api_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["auth"]
+)
 
 # User management
 api_router.include_router(
@@ -29,4 +35,11 @@ api_router.include_router(
     medical_records.router,
     prefix="/medical-records",
     tags=["medical-records"]
+)
+
+# Food management
+api_router.include_router(
+    food.router,
+    prefix="/food",
+    tags=["food"]
 ) 

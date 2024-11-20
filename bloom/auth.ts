@@ -1,41 +1,74 @@
-import { User } from "./lib/definitions";
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { authConfig } from "./auth.config";
-import bcrypt from "bcrypt";
-import { z } from "zod";
-
-async function getUser(email: string): Promise<User | undefined> {
-  try {
-    console.log(email);
-    const user = undefined;
-    return user;
-  } catch (error) {
-    console.error("Failed to fetch user:", error);
-    throw new Error("Failed to fetch user.");
-  }
-}
+import NextAuth from 'next-auth';
+import { authConfig } from './auth.config';
+import Credentials from 'next-auth/providers/credentials';
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  providers: [Credentials({
-    async authorize(credentials) {
-      const parsedCredentials = z.object({
-        email: z.string().email(),
-        password: z.string().min(6),
-      }).safeParse(credentials);
+  providers: [
+    Credentials({
+      async authorize(credentials) {
+        try {
+          const { email, password } = credentials as {
+            email: string;
+            password: string;
+          };
+          
+          if (!email || !password) {
+            return null;
+          }
 
-      if (parsedCredentials.success) {
-        const { email, password } = parsedCredentials.data;
-        const user = await getUser(email);
-        if (!user) return null;
-        const passwordsMatch = await bcrypt.compare(password, user.password);
+          // 调用 API 进行登录
+          const formData = new URLSearchParams();
+          formData.append('username', email);
+          formData.append('password', password);
 
-        if (passwordsMatch) return user;
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: formData,
+            }
+          );
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Login failed');
+          }
+
+          const data = await response.json();
+          
+          return {
+            id: email,
+            email: email,
+            accessToken: data.access_token,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
+          return null;
+        }
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.accessToken = user.accessToken;
+        token.email = user.email;
       }
-
-      console.log('Invalid credentials');
-      return null;
+      return token;
     },
-  })],
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.email = token.email as string;
+        session.accessToken = token.accessToken as string;
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/login',
+  },
 });

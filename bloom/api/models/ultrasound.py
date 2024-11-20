@@ -1,11 +1,12 @@
 from sqlalchemy import Column, Numeric, String, ForeignKey, Integer
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from ..db.base_class import Base
 
 class Ultrasound(Base):
     __tablename__ = "bloom_ultrasounds"
 
-    checkup_id = Column(Integer, ForeignKey("bloom_checkups.id"))
+    checkup_id = Column(UUID(as_uuid=True), ForeignKey("bloom_checkups.id"), nullable=False)
     head_circumference = Column(Numeric(4, 1))
     abdominal_circumference = Column(Numeric(4, 1))
     femur_length = Column(Numeric(4, 1))

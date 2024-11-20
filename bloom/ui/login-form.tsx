@@ -1,45 +1,70 @@
 "use client";
 
-import { Box, Button, Card, Flex, Text, TextField } from "@radix-ui/themes";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useActionState } from "react";
+import { authenticate } from "@/lib/actions";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
 export default function LoginForm() {
-  const router = useRouter();
+  const { toast } = useToast();
+  const [errorMessage, formAction, isPending] = useActionState(
+    authenticate,
+    undefined
+  );
+
+  useEffect(() => {
+    if (errorMessage) {
+      toast({
+        title: "Error",
+        description: errorMessage,
+      });
+    }
+  }, [errorMessage, toast]);
+
   return (
-    <Box className="p-4">
-      <Flex direction="column" align="center" justify="center" height="100vh">
-        <Card className="w-[95%] sm:w-full sm:max-w-md">
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            gap="5"
-            className="p-6"
-          >
-            <Text as="div" size="5" weight="bold">
-              Welcome to Bloom
-            </Text>
-            <TextField.Root
-              className="w-full"
-              placeholder="Enter your email"
-            ></TextField.Root>
-            <TextField.Root
-              className="w-full"
+    <div className="w-full max-w-md p-6 space-y-6">
+      <div className="flex items-center gap-2">
+        <Link href="/">
+          <ArrowLeft className="h-6 w-6" />
+        </Link>
+        <h1 className="text-2xl">Log In</h1>
+      </div>
+
+      <form action={formAction} className="space-y-4">
+        <div className="w-full">
+          <Label htmlFor="email">Email</Label>
+          <div className="relative">
+            <Input
+              type="email"
+              name="email"
+              id="email"
+              placeholder="Email"
+              required
+            />
+          </div>
+        </div>
+        <div className="relative">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input
               type="password"
-              placeholder="Enter your password"
-            ></TextField.Root>
-            <Flex direction="row" gap="3" className="w-full">
-              <Button className="w-full">Log In</Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.push("/signup")}
-              >
-                Sign Up
-              </Button>
-            </Flex>
-          </Flex>
-        </Card>
-      </Flex>
-    </Box>
+              name="password"
+              id="password"
+              placeholder="Password"
+              required
+              minLength={6}
+            />
+          </div>
+        </div>
+        <Button className="w-full text-white" disabled={isPending}>
+          {isPending ? "Logging in..." : "Log in"}
+        </Button>
+      </form>
+    </div>
   );
 }

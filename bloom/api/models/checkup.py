@@ -1,11 +1,13 @@
 from sqlalchemy import Column, String, Integer, Date, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from ..db.base_class import Base
-
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 class Checkup(Base):
     __tablename__ = "bloom_checkups"
 
-    user_id = Column(String(36), ForeignKey("bloom_patients.user_id"))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("bloom_patients.id"), nullable=False)
     pregnancy_week = Column(Integer)
     checkup_date = Column(Date, nullable=False)
     doctor_id = Column(String(36))

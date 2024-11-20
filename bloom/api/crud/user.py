@@ -1,6 +1,7 @@
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from ..core.security import get_password_hash
 
 from ..models.user import User
 from ..schemas.user import UserCreate, UserUpdate
@@ -16,5 +17,14 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         query = select(User).where(User.username == username)
         result = await db.execute(query)
         return result.scalar_one_or_none()
+    async def create(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
+        db_obj = User(
+            email=obj_in.email,
+            hashed_password=get_password_hash(obj_in.password)  # 使用 hashed_password 字段
+        )
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
 
 user = CRUDUser(User) 

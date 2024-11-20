@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List
 class Settings(BaseSettings):
     VERSION: str = "0.1.0"
+    ENVIRONMENT: str = "development"
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Bloom"
     SECRET_KEY: str = "your-secret-key-here"  # Should be loaded from environment in production
@@ -24,6 +25,8 @@ class Settings(BaseSettings):
     POSTGRES_SERVER: str = "localhost"  # default value if not in .env
     POSTGRES_PORT: str = "5432"        # default value if not in .env
     POSTGRES_DB: str
+
+    OPENAI_API_KEY: str
     
     @computed_field
     def SQLALCHEMY_DATABASE_URL(self) -> str:

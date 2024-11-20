@@ -1,11 +1,10 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+import uuid
 
 class UserBase(BaseModel):
     email: EmailStr
-    username: str
     is_active: Optional[bool] = True
-    is_superuser: Optional[bool] = False
 
 class UserCreate(UserBase):
     password: str
@@ -14,7 +13,7 @@ class UserUpdate(UserBase):
     password: Optional[str] = None
 
 class UserInDBBase(UserBase):
-    user_id: str
+    id: uuid.UUID
 
     class Config:
         from_attributes = True

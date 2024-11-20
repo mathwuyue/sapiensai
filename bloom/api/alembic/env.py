@@ -26,11 +26,24 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+tables_ordered = [
+    User.__table__,
+    Patient.__table__,
+    Checkup.__table__,
+    VitalSigns.__table__,
+    Ultrasound.__table__,
+    LabResults.__table__,
+    PrenatalScreening.__table__,
+    Recommendation.__table__,
+]
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
+for table in tables_ordered:
+    table.to_metadata(target_metadata)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

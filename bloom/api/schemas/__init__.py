@@ -6,6 +6,7 @@ from .ultrasound import Ultrasound, UltrasoundCreate, UltrasoundUpdate
 from .lab_results import LabResults, LabResultsCreate, LabResultsUpdate
 from .prenatal_screening import PrenatalScreening, PrenatalScreeningCreate, PrenatalScreeningUpdate
 from .recommendation import Recommendation, RecommendationCreate, RecommendationUpdate
+from .food import FoodAnalysis, FoodItem
 
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserInDB",
@@ -16,4 +17,5 @@ __all__ = [
     "LabResults", "LabResultsCreate", "LabResultsUpdate",
     "PrenatalScreening", "PrenatalScreeningCreate", "PrenatalScreeningUpdate",
     "Recommendation", "RecommendationCreate", "RecommendationUpdate",
+    "FoodAnalysis", "FoodItem",
 ] 

@@ -1,27 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 
 export default function DashboardPage() {
-  // Placeholder data - in real app would come from API/database
-  const prenatalRecords = [
-    { date: "2024-01-15", weight: 65, bloodPressure: "120/80" },
-    { date: "2024-02-15", weight: 67, bloodPressure: "118/78" },
-    // Add more data points
-  ];
-
-  const glucoseReadings = [
-    { date: "2024-03-01", level: 95 },
-    { date: "2024-03-02", level: 92 },
-    // Add more readings
-  ];
-
-  const nutritionData = {
-    carbs: 50,
-    protein: 25,
-    fats: 25,
-  };
+  // const session = await auth();
+  // if (!session?.user) {
+  //   redirect("/login");
+  // }
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -1,12 +1,14 @@
 from sqlalchemy import Column, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from ..db.base_class import Base
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 
 class Patient(Base):
     __tablename__ = "bloom_patients"
 
-    id = None
-    user_id = Column(String(36), ForeignKey("bloom_users.user_id"), primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("bloom_users.id"), nullable=False)
     name = Column(String(50), nullable=False)
     date_of_birth = Column(Date, nullable=False)
     blood_type = Column(String(10))
@@ -15,5 +17,5 @@ class Patient(Base):
     emergency_contact = Column(String(50))
 
     # Relationships
-    user = relationship("User", backref="patient_profile")
+    user = relationship("User", backref="patient")
     checkups = relationship("Checkup", back_populates="patient")
