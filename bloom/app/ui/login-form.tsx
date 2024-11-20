@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useActionState } from "react";
-import { authenticate } from "@/lib/actions";
+import { authenticate } from "@/app/lib/actions";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Label } from "@/components/ui/label";
