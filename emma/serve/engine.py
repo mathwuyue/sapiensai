@@ -39,12 +39,6 @@ class ChatConfig(BaseModel):
     organization: str
 
 
-router_options = RouterOptions(
-    options=["人力资源相关问题", "与前续对话相关", "Other"],
-    actions={"人力资源相关问题": RagLeader, "Other": NullAgent, "与前续对话相关": NullAgent}
-)
-
-
 async def workflow(query: Query, config: str, websocket) -> str:
     '''
     TODO: Only support single round conversation. Future should be async and support multi-round conversation.

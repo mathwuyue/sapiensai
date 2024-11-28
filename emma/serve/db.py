@@ -3,6 +3,8 @@ import datetime
 from peewee import *
 from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField, ArrayField
 from dotenv import load_dotenv
+from utils import make_table_name
+
 
 load_dotenv()
 
@@ -18,13 +20,12 @@ db = PostgresqlExtDatabase(
 class BaseModel(Model):
     class Meta:
         database = db
-        schema = 'valacy'
+        table_function = make_table_name
 
 
 class User(BaseModel):
     id = AutoField(primary_key=True)
-    username = CharField(unique=True)
-    password = TextField()
+    userid = CharField(unique=True)
     user_meta = BinaryJSONField(null=True)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField()
@@ -81,3 +82,8 @@ class Product(BaseModel):
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()
         return super().save(*args, **kwargs)
+    
+    
+# if __name__ == '__main__':
+#     from utils import autodiscover_models
+#     autodiscover_models(database=db)

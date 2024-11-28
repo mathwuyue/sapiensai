@@ -13,7 +13,7 @@ class QAAgent(RagAgent):
         self.context = context
         return vectors, context
     
-    def act(self, query):
+    async def act(self, query):
         if not self.context:
             _, self.context = self.rag(query)
         # mem_ans = self.memory(query)
@@ -23,8 +23,7 @@ class QAAgent(RagAgent):
         #     query = rag_with_memory_prompt().render(retrieved_chunk=self.context, question=query, memory=mem_ans, examples=examples)
         # else:
         query = qa_prompt(query, context=self.context)
-        print(query)
-        return self.chat(query, stream=True)
+        return await self.chat(query, stream=True)
     
     
 if __name__ == '__main__':

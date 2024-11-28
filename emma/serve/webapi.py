@@ -10,7 +10,7 @@ import dotenv
 import os
 from llm import chunk_to_dict
 from serve.model import UploadFileRequest, FileStatusResponse, ChatRequest, ChatSessionRequest, ChatSessionResponse
-from util import generate_unique_session_id, delete_session
+from history import generate_unique_session_id, delete_session
 import logging
 import time
 from pathlib import Path
