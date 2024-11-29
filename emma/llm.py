@@ -1,62 +1,64 @@
 from http import HTTPStatus
 import os
-import dashscope
-from openai import OpenAI
 from dotenv import load_dotenv
+from datetime import datetime
+from litellm import acompletion
+import asyncio, traceback
 import time
-import instructor
+from logger import file_error_logger as error_logger
+
+
 load_dotenv()
 
 
-client = OpenAI(api_key=os.getenv("DASHSCOPE_KEY"), base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
-dashscope.api_key = os.getenv("DASHSCOPE_KEY")
+
+# client = AsyncOpenAI(api_key=os.getenv("DASHSCOPE_KEY"), base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
+api_key = {'dashscope': os.getenv("DASHSCOPE_KEY")}
+# os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+LLM_PROVIDER = {
+    'qwen2-72b-instruct': 'dashscope',
+    'qwen2.5-72b-instruct': 'dashscope',
+    'qwen-max': 'dashscope',
+    'qwen-plus': 'dashscope',
+    'qwen-vl-max': 'dashscope',
+    'qwen2-vl-7b-instruct': 'dashscope',
+    'Qwen/Qwen2.5-32B-Instruct-AWQ': 'vllm'
+}
 
 
-def llm(query: str, model: str = 'qwen2-72b-instruct', stream=False, temperature=0.85, top_p=0.8, history=[], json_model=None) -> str:
+async def llm(query: str, model: str = 'gpt-4o-mini', stream=False, temperature=0.85, top_p=0.8, history=[], json_format=None) -> str:
     messages = history + [{"role": "user", "content": query}]
-    if 'llama' in model:
-        response = dashscope.Generation.call(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            result_format='message',
-            top_p=top_p
-        )
-        if response.status_code == HTTPStatus.OK:
-            return response.output.text
-        else:
-            print('Request id: %s, Status code: %s, error code: %s, error message: %s' % (
-                response.request_id, response.status_code,
-                response.code, response.message
-            ))
-    else:
+    llm_provider = LLM_PROVIDER.get(model, None)
+    try:
         start = time.time()
-        if json_model:
-            json_client = instructor.from_openai(client)
-            response = json_client.chat.completions.create(
-                model=model,
+        if llm_provider == 'dashscope':
+            response = await acompletion(
+                model=f'openai/{model}',
+                api_key=api_key['dashscope'],
+                api_base='https://dashscope.aliyuncs.com/compatible-mode/v1',
                 messages=messages,
-                stream=stream,
-                response_model=json_model,
                 temperature=temperature,
-                top_p=top_p
+                stream=stream
             )
         else:
-            print(model)
-            print(os.getenv("DASHSCOPE_KEY"))
-            response = client.chat.completions.create(
+            response = await acompletion(
                 model=model,
                 messages=messages,
+                temperature=temperature,
                 stream=stream,
-                temperature=0.1
+                response_format=json_format
             )
-        print('llm time: ', time.time()-start)
+        print('llm time:', time.time() - start)
         if stream:
             return response
-        if json_model:
-            return response
-        return response.choices[0].message.content
-    
+        else:
+            return response.choices[0].message.content
+    except Exception as e:
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        error_msg = f"{timestamp} - Model: {model} - Error: {str(e)}\n{traceback.format_exc()}"
+        error_logger.error(error_msg)
+        print(error_msg)
+
 
 def chunk_to_dict(chunk) -> dict:
     if isinstance(chunk, dict):
@@ -70,3 +72,8 @@ def chunk_to_dict(chunk) -> dict:
     #     'object': chunk.object,
     #     'choices': [{'index': c.index, 'delta': c.delta, 'logprobs': c.logprobs, 'finish_reason': c.finish_reason} for c in chunk.choices]
     # }
+
+
+if __name__ == '__main__':
+    response = asyncio.run(llm('你好', 'gpt-4o-mini'))
+    print(response)

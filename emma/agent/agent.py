@@ -8,29 +8,25 @@ from typing import Dict
 import time
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("DASHSCOPE_KEY"), base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
-model = "qwen2-72b-instruct"
+model = os.getenv("MODEL")
 # model = "llama3-70b-instruct"
 
 
 class Agent:
-    def __init__(self, role: Dict = None, config=None) -> None:
-        self.role = role or {'role': 'system', 
-                             'content': '你是一个名为Qwen的AI助手，你更擅长中文和英文对话。你将接收到一个用户的问题，请根据你的知识库回答这个问题。你会为用户提供安全，有帮助，准确的回答。'}
-        self.config = config
-        self.event_id = config['event_id']
-        r = Redis(host='localhost', port=6379, db=0)
-        r.set(f"{self.event_id}_rag_status", "start")
+    def __init__(self, description: str = None, config=None) -> None:
+        self.description = description
+        
+    def description(self):
+        return self.description
     
     def act(self, query: str) -> str:
-        return query
+        raise NotImplementedError
     
-    def chat(self, query: str, stream=False, history=[], json_model=None) -> str:
-        return llm(query, model, stream, history, json_model)
+    def handle_function_call(self, query: str) -> str:
+        raise NotImplementedError
     
-    def response(self, query: str) -> str:
-        return self.chat(query)
-    
+    def handle_tool_calls(self, query: str) -> str:
+        raise NotImplementedError
     
 class MemoryAgent(Agent):
     def __init__(self, role: Dict = None, config=None) -> None:
@@ -73,7 +69,7 @@ class AgentLeader(Agent):
                 return response
         return "I am sorry. I am not able to answer your question."
     
-    def planner(self, instruction: str) -> str:
+    def planner(self, query: str) -> str:
         return self.act(query)
     
     

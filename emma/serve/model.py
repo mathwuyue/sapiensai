@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, Field, model_validator
+from typing import List, Dict, Any, Optional, Self
 import uuid
+from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, DietaryData, DietarySummary
 
 
 class StandardResponse(BaseModel):
@@ -84,3 +85,21 @@ class RefResponseChunk(BaseModel):
     page: int
     start: int
     end: int
+    
+    
+class NutritionResponse(BaseModel):
+    macro: NutritionMacro
+    micro: NutritionMicro
+    mineral: NutritionMineral
+    
+    
+class DietaryResponse(BaseModel):
+    emma: DietarySummary
+    days: int
+    dietary: List[DietaryData] = Field(...)
+    refs: List[Dict[str, Any]] = Field(default_factory=list)
+    
+    @model_validator(mode='after')
+    def check_dietary_length(self) -> Self:
+        assert len(self.dietary) == self.days
+        return self

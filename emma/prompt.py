@@ -181,6 +181,21 @@ def qa_prompt(query, context):
     Question: {{ query }}
     '''
 
+ 
+@prompt
+def get_food_nutrients_prompt(food_img):
+    '''Analyze this food image and provide nutritional information.
+                Return only a JSON with this exact structure:
+                {
+                "items": [{
+                    "macro": {"calories": float, "protein": float, "fat": float, "carb": float},
+                    "micro": {"fa": float, "vc": float, "vd": float},
+                    "mineral": {"calcium": float, "iron": float, "zinc": float, "iodine": float}
+                }],
+                "image_description": "brief description of the image"
+                }
+    '''
+
 
 if __name__ == '__main__':
     from openai import OpenAI

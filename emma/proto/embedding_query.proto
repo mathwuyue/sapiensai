@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package embedding_query;
+
+message EmbeddingQuery {
+    repeated string queries = 1;
+}
+
+/* message EmbeddingResponse {
+    message Embedding {
+        repeated float values = 1 [packed=true];
+    }
+    repeated Embedding embeddings = 1;
+} */
+
+message EmbeddingResponse {
+    bytes serialized_embeddings = 1;
+}
+
+service EmbeddingService {
+    rpc GetEmbeddings (EmbeddingQuery) returns (EmbeddingResponse);
+}

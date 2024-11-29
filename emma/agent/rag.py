@@ -19,7 +19,7 @@ class RagAgent(MemoryAgent):
         self.context, self.context_meta = self.vector_retrieval.rerank(query)
         return self.context, self.context_meta
 
-    def act(self, query):
+    async def act(self, query):
         mem_ans = self.memory(query)
         (queries, ans) = Memory.get_memory(self.organization, limit=15)
         examples = list(zip(queries, ans))
