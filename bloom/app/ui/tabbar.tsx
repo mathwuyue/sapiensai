@@ -64,6 +64,7 @@ export function TabBar() {
           </Link>
         ))}
       </div>
+      <div className="h-safe-bottom bg-white" />
     </nav>
   );
 }

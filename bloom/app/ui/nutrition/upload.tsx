@@ -62,7 +62,7 @@ export default function Upload() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // 发送请求
+      // send request
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/food/analyze`,
         {
@@ -194,7 +194,6 @@ export default function Upload() {
         ref={fileInputRef}
         className="hidden"
         accept="image/*"
-        capture="environment"
         onChange={handleImageSelect}
       />
     </div>

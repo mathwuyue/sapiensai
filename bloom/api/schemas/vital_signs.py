@@ -25,4 +25,4 @@ class VitalSignsInDBBase(VitalSignsBase):
         from_attributes = True
 
 class VitalSigns(VitalSignsInDBBase):
-    pass 
+    pass
