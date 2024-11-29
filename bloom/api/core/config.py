@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     OPENAI_API_KEY: str
+    QWEN_API_KEY: str
 
     ADMIN_TOKEN: str
     
