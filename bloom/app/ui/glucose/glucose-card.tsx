@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -18,6 +18,15 @@ import {
 import { Glucose } from "@/app/lib/definitions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { fetchGlucoseReadings } from "@/app/lib/actions/glucose";
+import { useEffect, useState, } from "react";
+
+interface FormattedGlucose {
+  value: number;
+  date: string;
+  type: number;
+
+}
 
 const data: Glucose[] = [
   {
@@ -62,6 +71,49 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function GlucoseCard() {
+  const [glucoseData, setGlucoseData] = useState<FormattedGlucose[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+  
+    
+    async function loadGlucoseData() {
+      try {
+        const data = await fetchGlucoseReadings();
+        //console.log('Raw API data:', data); // 查看原始数据
+
+        
+        // 格式化数据用于图表显示
+        const formattedData = data.map((reading: Glucose) => ({
+          value: Number(reading.glucose_value),
+          date: new Date(reading.glucose_date).toISOString().split('T')[0], 
+          //type: reading.measurement_type === 'fasting' ? 1 : 2  // 或者使用其他数字映射逻辑
+          type: Number(reading.measurement_type),
+        }));      
+        //console.log('Formatted data:', formattedData); // 调试日志
+
+
+        const sortedData = formattedData.sort((a, b) => {
+          // 首先按日期排序
+          const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+          // 如果日期相同，则按type排序
+          if (dateCompare === 0) {
+            return a.type - b.type;
+          }
+          return dateCompare;
+        });
+
+        setGlucoseData(sortedData);
+
+        console.log('Final formatted data:', formattedData); // 查看最终数据
+
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadGlucoseData();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -71,7 +123,7 @@ export default function GlucoseCard() {
         <ChartContainer config={chartConfig}>
           <AreaChart
             accessibilityLayer
-            data={data}
+            data={glucoseData}
             margin={{
               left: 12,
               right: 12,
@@ -79,19 +131,25 @@ export default function GlucoseCard() {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="glucose_date"
+              dataKey="date"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.toLocaleDateString()}
+              //tickFormatter={(value) => value.toLocaleDateString()}
             />
+            <YAxis
+              domain={[0, 'auto']}  // 设置最小值为 0，最大值自动计算
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+  />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}
             />
             <Area
-              dataKey="glucose_value"
-              type="natural"
+              dataKey="value"
+              type="monotone"
               fill="var(--color-glucose)"
               fillOpacity={0.4}
               stroke="var(--color-glucose)"

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/auth";
+import { Glucose } from "@/app/lib/definitions"; // 确保路径正确
 
 const GlucoseSchema = z.object({
   measurement_type: z.number().int().min(1).max(8),
@@ -73,3 +74,32 @@ export async function createGlucoseReadings(prevState: State, formData: FormData
   revalidatePath("/dashboard")
   redirect("/dashboard")
 }
+
+export async function fetchGlucoseReadings(): Promise<Glucose[]> {
+  try {
+    const session = await auth();
+    const response = await fetch(`${URL}/glucose/`, {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session?.accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch glucose readings");
+      return [];
+
+    }
+    return response.json();
+
+  } catch (error) {
+    console.log(error);
+    return []; 
+  }
+}
+
+  //return response.json();
+  //delete
+  
+  //put
