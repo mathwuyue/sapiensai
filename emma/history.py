@@ -42,7 +42,7 @@ def get_history(user_id, session_id, user_meta, limit=20):
     ).where(
         (UserHistory.user_id == user_id) & 
         (UserHistory.session_id == session_id) &
-        (UserHistory.is_deleted == False)
+        (UserHistory.is_deleted.is_(False))
     ).order_by(
         UserHistory.created_at.desc()
     ).limit(limit)

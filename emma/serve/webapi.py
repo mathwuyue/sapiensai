@@ -185,13 +185,16 @@ async def get_chat_history(
     try:
         # Start with base query
         query = (UserHistory
-                .select()
-                .where(
-                    (UserHistory.user_id == user_id) & 
-                    (UserHistory.session_id == session_id) &
-                    (UserHistory.is_deleted == False)
-                ))
-
+                 .select(
+                     UserHistory.role,
+                     UserHistory.message,
+                     UserHistory.created_at
+                 )
+                 .where(
+                     (UserHistory.user_id == user_id) & 
+                     (UserHistory.session_id == session_id) &
+                     (UserHistory.is_deleted.is_(False))
+                 ))
         # Add date filtering if parameters provided
         if date and offset:
             try:
