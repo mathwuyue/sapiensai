@@ -11,13 +11,13 @@ class PatientBase(BaseModel):
     emergency_contact: Optional[str] = None
 
 class PatientCreate(PatientBase):
-    user_id: str
+    user_id: int
 
 class PatientUpdate(PatientBase):
     pass
 
 class PatientInDBBase(PatientBase):
-    user_id: str
+    user_id: int
 
     class Config:
         from_attributes = True

@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col px-6">
+    <div className="h-screen flex flex-col px-6">
       {/* Logo Section */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <Image
           src="/logo.png"
           alt="Bloom Logo"
@@ -17,7 +17,7 @@ export default function Home() {
       </div>
 
       {/* Bottom Section */}
-      <div className="space-y-4 mb-10">
+      <div className="space-y-4 mb-[calc(env(safe-area-inset-bottom)+2.5rem)] pb-safe-bottom">
         <Link href="/login" className="block">
           <Button className="w-full text-white font-semibold text-lg h-12">
             Log in

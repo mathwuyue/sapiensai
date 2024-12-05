@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 from api.core.config import settings
 from api.schemas.food import FoodAnalysis, FoodItem
 
-client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+client = AsyncOpenAI(api_key=settings.QWEN_API_KEY, base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
 
 def extract_json_from_text(text: str) -> Dict[str, Any]:
     """

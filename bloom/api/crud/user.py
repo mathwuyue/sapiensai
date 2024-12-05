@@ -20,7 +20,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     async def create(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
         db_obj = User(
             email=obj_in.email,
-            hashed_password=get_password_hash(obj_in.password)  # 使用 hashed_password 字段
+            hashed_password=get_password_hash(obj_in.password)
         )
         db.add(db_obj)
         await db.commit()

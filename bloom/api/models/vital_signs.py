@@ -1,12 +1,12 @@
-from sqlalchemy import Column, Numeric, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Numeric, Integer, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
-from ..db.base_class import Base
+from api.db.base_class import Base, id_generator
 
 class VitalSigns(Base):
     __tablename__ = "bloom_vital_signs"
 
-    checkup_id = Column(UUID(as_uuid=True), ForeignKey("bloom_checkups.id"), nullable=False)
+    id = Column(BigInteger, primary_key=True, index=True, default=id_generator.generate_id)
+    checkup_id = Column(BigInteger, ForeignKey("bloom_checkups.id"), nullable=False)
     weight = Column(Numeric(5, 2))
     weight_gain = Column(Numeric(4, 2))
     blood_pressure_sys = Column(Integer)

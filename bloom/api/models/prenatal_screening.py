@@ -1,12 +1,12 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, ForeignKey, Text, Date, BigInteger
 from sqlalchemy.orm import relationship
-from ..db.base_class import Base
+from api.db.base_class import Base, id_generator
 
 class PrenatalScreening(Base):
     __tablename__ = "bloom_prenatal_screenings"
 
-    checkup_id = Column(UUID(as_uuid=True), ForeignKey("bloom_checkups.id"), nullable=False)
+    id = Column(BigInteger, primary_key=True, index=True, default=id_generator.generate_id)
+    checkup_id = Column(BigInteger, ForeignKey("bloom_checkups.id"), nullable=False)
     screening_type = Column(String(50))
     screening_date = Column(Date)
     result = Column(Text)

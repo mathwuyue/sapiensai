@@ -6,14 +6,19 @@ from .ultrasound import Ultrasound
 from .lab_results import LabResults
 from .prenatal_screening import PrenatalScreening
 from .recommendation import Recommendation
-
+from .glucose import Glucose
+from .profile import Profile, UserCondition, UserComplication
 __all__ = [
     "User",
     "Patient",
+    "Glucose",
     "Checkup",
     "VitalSigns",
     "Ultrasound",
     "LabResults",
     "PrenatalScreening",
-    "Recommendation"
+    "Recommendation",
+    "Profile",
+    "UserCondition",
+    "UserComplication"
 ] 

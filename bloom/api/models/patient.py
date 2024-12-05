@@ -1,14 +1,12 @@
-from sqlalchemy import Column, String, Date, ForeignKey
+from sqlalchemy import Column, String, Date, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
-from ..db.base_class import Base
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
+from api.db.base_class import Base, id_generator
 
 class Patient(Base):
     __tablename__ = "bloom_patients"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("bloom_users.id"), nullable=False)
+    id = Column(BigInteger, primary_key=True, index=True, default=id_generator.generate_id)
+    user_id = Column(BigInteger, ForeignKey("bloom_users.id"), nullable=False)
     name = Column(String(50), nullable=False)
     date_of_birth = Column(Date, nullable=False)
     blood_type = Column(String(10))
@@ -18,4 +16,3 @@ class Patient(Base):
 
     # Relationships
     user = relationship("User", backref="patient")
-    checkups = relationship("Checkup", back_populates="patient")
