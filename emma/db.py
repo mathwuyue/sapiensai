@@ -123,7 +123,7 @@ class MemoryModel(Model):
 
 class UserHistory(Model):
     id = AutoField(primary_key=True)
-    user_id = BigIntegerField()
+    user_id = CharField(max_length=255)
     session_id = UUIDField()
     user_meta = BinaryJSONField(null=True)
     role = CharField(max_length=15)

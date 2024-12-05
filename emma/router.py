@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Type
 from agent.agent import Agent
 from llm import llm
+from utils import extract_json_from_text
 
 
 class RouterOptions(BaseModel):
@@ -41,3 +42,24 @@ class OptionRouter(Router):
         choice = choice.strip("'\"")  # Remove any quotes from the choice
         agent = self.options.actions[choice]
         return agent, choice
+    
+    
+if __name__ == "__main__":
+    import time
+    import asyncio
+    
+    async def main():
+        options = ['Ask for dietary recommendations', 'Ask questions about food / nutritient', 'Input information required by the assistant', 'Topics related to health and nutrition', 'Topics related to exercise and fitness']
+        reject = '我是健康助手，我可以帮助您制定饮食计划，回答关于食物和营养的问题，以及提供健康和营养相关的建议。'
+        query = '中国首都是那里'
+        prompt = router_prompt(options, query, reject)
+        history = [
+            {'role': 'assistant', 'content': '我是健康助手，我可以帮助您制定饮食计划，回答关于食物和营养的问题，以及提供健康和营养相关的建议。'}, 
+            {'role': 'user', 'content': '你好，请问我应该如何饮食'}, {'role': 'assistant', 'content': '请问您的饮食习惯是什么呢？例如喜欢吃海鲜，不吃生菜等等。'}, 
+        ]
+        start = time.time()
+        choice = await llm(prompt, model='qwen2.5-instruct-awq', history=history)
+        print(choice)
+        print(time.time() - start)
+
+    asyncio.run(main())

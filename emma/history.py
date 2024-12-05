@@ -2,15 +2,10 @@
 Common Utility functions. Please modify the functions as needed.
 '''
 
-import orjson
-import redis
 from db import db, UserHistory
 from pydantic import BaseModel
 from typing import List, Optional
-from peewee import *
 import uuid
-from jinja2 import Template
-from peewee import Model
 
 
 class HistoryItem(BaseModel):
@@ -37,74 +32,58 @@ def delete_session(user_id, session_id):
 
 def get_history(user_id, session_id, user_meta, limit=20):
     '''
-    Won't use user_meta in this version
+    Won't use user_meta in this version. Remove Redis
     '''
-    r = redis.Redis(host='localhost', port=6379, db=0)
-    key = f'{user_id}_{session_id}_history'
-    # get history from redis
-    history = r.get(key)
-    if history:
-        history = orjson.loads(history)
-        if limit > 0 and len(history['history']) > limit:
-            history = {
-                'state': history['state'],
-                'history': history['history'][-limit:]
-            }
-    else:
-        # get from db
-        sql = Template('''
-        select state, message, created_at
-        from userhistory_index.search('role:user AND is_deleted:false AND user_id:{{ user_id }} AND session_id:{{ session_id }}')
-        order by created_at desc limit {{ limit }}
-        ''').render(user_id=user_id, session_id=session_id, limit=limit)
-        print(sql)
-        results = list(UserHistory.raw(sql))
-        if results:
-            history = {
-                'state': results[-1].state,
-                'history': [HistoryItem(role='user', content=h.message, timestamp=h.created_at.isoformat()).model_dump()
-                            for h in sorted(results, key=lambda x: x.created_at)]
-            }
-        else:
-            history = None
-        # save to redis
-        if history:
-            r.set(key, orjson.dumps(history), ex=18000)
+    results = UserHistory.select(
+        UserHistory.role,
+        UserHistory.message,
+        UserHistory.state,
+        UserHistory.created_at
+    ).where(
+        (UserHistory.user_id == user_id) & 
+        (UserHistory.session_id == session_id) &
+        (UserHistory.is_deleted == False)
+    ).order_by(
+        UserHistory.created_at.desc()
+    ).limit(limit)
+
+    history = None
+    if results:
+        history = {
+            'state': list(results)[-1].state,
+            'history': [
+                HistoryItem(
+                    role=h.role, 
+                    content=h.message, 
+                    timestamp=h.created_at.isoformat()
+                ).model_dump()
+                for h in sorted(list(results), key=lambda x: x.created_at)
+            ]
+        }
     return history if history is None else History(**history)
 
 
-def update_history(user_id: str, session_id: str, user_meta: dict, state: str, records: List[HistoryItem]) -> History:
-    # Connect to Redis
-    r = redis.Redis(host='localhost', port=6379, db=0)
-    key = f'{user_id}_{session_id}_history'
-    # Append new records to UserHistory table
+def update_history(user_id: str, session_id: str, user_meta: dict, state: str, records: HistoryItem | list[HistoryItem]) -> History:
+    '''
+    Remove redis cache in this version 
+    '''
+    if not isinstance(records, list):
+        records = [records]
+    # Insert new records
+    data = [
+        {
+            'user_id': user_id,
+            'session_id': session_id,
+            'role': record.role,
+            'message': record.content,
+            'state': state
+        }
+        for record in records
+    ]
     with db.atomic():
-        data = [
-            {
-                'user_id': user_id,
-                'session_id': session_id,
-                'user_meta': user_meta,
-                'role': record.role,
-                'message': record.content,
-                'state': state
-            }
-            for record in records
-        ]
         UserHistory.insert_many(data).execute()
-    # Update Redis cache
-    cached_history = r.get(key)
-    if cached_history:
-        history = History(**orjson.loads(cached_history))
-    else:
-        history = History(state=state, history=[])
-    # Append only user messages to the Redis cache
-    user_records = [record for record in records if record.role == 'user']
-    history.history.extend(user_records)
-    history.state = state
-    # Update Redis with the new history
-    r.set(key, orjson.dumps(history.model_dump()), ex=18000)
-    # return history
-    return history
+    # Return updated history
+    return get_history(user_id, session_id, user_meta)
 
 
 def search_history():

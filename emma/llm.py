@@ -13,7 +13,7 @@ load_dotenv()
 
 
 # client = AsyncOpenAI(api_key=os.getenv("DASHSCOPE_KEY"), base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
-api_key = {'dashscope': os.getenv("DASHSCOPE_KEY")}
+api_key = {'dashscope': os.getenv("DASHSCOPE_KEY"), 'vllm': os.getenv("VLLM_API_KEY")}
 # os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 LLM_PROVIDER = {
     'qwen2-72b-instruct': 'dashscope',
@@ -22,7 +22,11 @@ LLM_PROVIDER = {
     'qwen-plus': 'dashscope',
     'qwen-vl-max': 'dashscope',
     'qwen2-vl-7b-instruct': 'dashscope',
-    'Qwen/Qwen2.5-32B-Instruct-AWQ': 'vllm'
+    'Qwen/Qwen2.5-32B-Instruct-AWQ': 'vllm',
+    'Qwen/Qwen2.5-7B-Instruct-AWQ': 'vllm',
+    'qwen2.5-32b-instruct-awq': 'vllm',
+    'qwen2.5-7b-instruct-awq': 'vllm',
+    'qwen2.5-instruct-awq': 'vllm',
 }
 
 
@@ -39,6 +43,16 @@ async def llm(query: str, model: str = 'gpt-4o-mini', stream=False, temperature=
                 messages=messages,
                 temperature=temperature,
                 stream=stream
+            )
+        elif llm_provider == 'vllm':
+            response = await acompletion(
+                model=f'hosted_vllm/{model}',
+                api_key=api_key['vllm'],
+                api_base='http://ehr.stalent.cn:53698/v1',
+                messages=messages,
+                temperature=temperature,
+                stream=stream,
+                response_format=json_format
             )
         else:
             response = await acompletion(

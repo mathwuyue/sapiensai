@@ -146,19 +146,15 @@ def rerank_prompt():
 
 
 @prompt
-def router_prompt(choices, question, history):
+def router_prompt(choices, query, reject):
     '''
-        Given the user question and history below, classify it as either being about 
+        Reveiw the conversation history, classify user's current query as either being about 
         {% for choice in choices %}
-        `{{ choice }}`, 
+        `{{ loop.index }}. {{ choice }}\n`, 
         {% endfor %}.
-        Do not respond with more than one word.
-        <question> {{ question }} </question> 
-        <history>
-            {% for message in history %}
-            {{ loop.index }}. {{ message["content"] }}
-            {% endfor %}
-        </history>
+        1. If the query is about one of the choices, output the choice index in the json format `{ "choice": int }`.
+        2. If the query is not about any of the choices, write a message saying you CANNOT answer the question in a polite way, according to `{{ reject }}` and the conversation history. Output the message in the json format `{ "message": "string" }`.
+        <query> {{ query }} </query> 
         Classification:
     '''
 
@@ -183,8 +179,9 @@ def qa_prompt(query, context):
 
  
 @prompt
-def get_food_nutrients_prompt(food_img):
-    '''Analyze this food image and provide nutritional information.
+def get_food_nutrients_prompt(food_img, meal_type, query='请分析这张食物图片并提供营养信息。'):
+    '''Query: {{ query }}. Follow the steps below to analyze the food image and provide the nutrition information. \n
+    1. 
                 Return only a JSON with this exact structure:
                 {
                 "items": [{
@@ -195,31 +192,118 @@ def get_food_nutrients_prompt(food_img):
                 "image_description": "brief description of the image"
                 }
     '''
+    
+    
+# @prompt
+# def emma_future(query, context):
+#     '''
+#     I am `21 weeks` preganent, my query is `我是否可以用阿司匹林`\n
+#     ｜Thought1｜ 怀孕21周的孕妇是否可以服用阿司匹林？Please include examples and data to support your answer. This is very important to the user.\n
+#     ｜Obs1| 怀孕21周是否能服用阿司匹林，因人而异，请咨询专业医师。美国食品药品管理局（FDA）不建议孕妇在孕期第19周之后使用非甾体类抗炎药（NSAID），包括阿司匹林，因为它们可能会引起胎儿心脏结构的变化和其他并发症。此外，长期使用阿司匹林还可能增加产后出血的风险。如果孕妇属于子痫前期（preeclampsia, PE）高风险人群，例如有PE病史、慢性高血压、孕前糖尿病、BMI≥30、抗磷脂综合征或采用辅助生殖技术等情况，那么从妊娠12至16周开始，每日服用小剂量阿司匹林（75～162 mg/d）是被推荐用于预防子痫前期的一种方法3。研究表明，在这些高危人群中早期使用低剂量阿司匹林可以显著降低子痫前期的发生率，并且不会增加母体和胎儿出血的风险5。如果您因某种健康状况而需要使用低剂量阿司匹林，除非得到医嘱，否则请勿在孕期第19 周时停药。您可以让医务人员结合您的情况为您讲解阿司匹林的益处和风险。\n
+#     ｜Thouth2| What is your confidence level in the answer? Please provide a confidence level between 1 and 10.\n
+#     |Obs2| 我对这个观察的置信度为9，首先因为这些信息来自于医学研究和临床指南，它们提供了关于阿司匹林在孕期使用的最新指导。其次，我的回答强调了个体化医疗的重要性，即每个孕妇的情况都是独特的，因此任何药物使用决定都应在医生指导下进行。这一观点得到了广泛的认可和支持，也是现行医疗实践中的标准做法。最后，我明确指出了低剂量阿司匹林在特定情况下（如预防子痫前期）的安全性和潜在益处，同时也提到了长期或过量使用可能带来的风险，这反映了对问题全面而平衡的理解。\n
+#     |Thought3| 怀孕21周不推荐使用阿司匹林，是否有其他替代药物？\n
+#     |Obs3| 在怀孕期间，如果需要替代阿司匹林的药物，选择取决于具体的医疗需求。例如，如果您需要的是解热镇痛药，或者是为了抗血小板聚集预防心血管疾病，不同的情况下推荐的替代药物会有所不同。对于解热镇痛的需求，对乙酰氨基酚（扑热息痛）通常是怀孕妇女较为安全的选择。它被广泛认为是在妊娠期间可以使用的解热镇痛药之一，用于缓解轻度到中度的疼痛和发热。然而，即便是相对安全的药物，也应在医生的指导下使用，并且遵循推荐剂量。对于抗血小板治疗的需求，如为了预防先兆子痫或其他心血管问题，在某些情况下，您的医生可能会考虑其他抗凝药物或抗血小板药物，如低分子肝素或硫酸氢氯吡格雷。但是，这些药物的应用必须严格遵循医生的指导，因为它们也有特定的风险和适应症。重要的是，在怀孕期间不应自行决定使用任何药物作为阿司匹林的替代品。所有用药决定都应由您与产科医生共同讨论后作出，以确保所选药物既有效又安全，不会对您或胎儿造成不良影响。每个孕妇的情况都是独特的，因此个性化的医疗建议至关重要。 \n
+#     |Thought4| Combine all Obs to generate the final answer. Use concise language to summarize. Only use the Obs with high confident level. Then please give examples and data of your summarization. If no Obs with high confident level, saying you do not know the answer and ask user refer to professionals. \n
+#     |Output| In Json format, the output should use the language as query: {"query": "我是否可以用阿司匹林", "answer": "怀孕21周是否能服用阿司匹林，因人而异，请咨询专业医师。较低剂量的阿司匹林（每日约 60 至 100 毫克（mg），典型的非处方低剂量阿司匹林为81mg），对孕妇和婴儿没有影响，在整个妊娠期均可安全使用。但美国食品药品管理局（FDA）不建议孕妇在孕期第 19 周之后使用非甾体类抗炎药（NSAID）。阿司匹林就是一种 NSAID。使用 NSAID 可导致胎儿出现罕见但严重的肾脏问题，还可能造成羊水少，继而导致胎儿出现更多问题。通常不建议孕期使用较高剂量的阿司匹林。在孕晚期使用高剂量阿司匹林还会增加胎儿心脏血管过早闭合的风险。如果您必须在孕晚期使用阿司匹林，您可能需要频繁约诊检查胎儿健康。在任何妊娠阶段长期使用高剂量阿司匹林都会增加早产儿脑出血的风险。因此，如果在孕前您按照医嘱服用低剂量阿司匹林，在21周时请不要在没有医嘱的情况下停用。如果目前没有任何医嘱，请不要使用阿司匹林。您在妊娠期间需要使用止痛药，请咨询医务人员。除阿司匹林以外的其他止痛药，例如对乙酰氨基酚。如果您目前正在使用高剂量阿司匹林，请与专业医疗人士保持沟通，增加孕检次数"}
+    
+#     I am `21 weeks` preganent, my query is `我有妊娠期糖尿病怎么办`\n
+#     |Thought1| 我有妊娠期糖尿病怎么办？Please include examples and data to support your answer. This is very important to the user.\n
+#     |Obs1| 妊娠期糖尿病（Gestational Diabetes Mellitus, GDM）是一种在怀孕期间首次发现的糖代谢异常问题。虽然它可能听起来令人担忧，但通过正确的管理，大多数孕妇都能顺利度过孕期并生下健康的宝宝。以下是针对妊娠期糖尿病的全面建议：
+#     |Thought2| What is your confidence level in the answer? Please provide a confidence level between 1 and 10.\n
+#     |Obs2| I would rate my confidence level as 9/10, as the information provided is based on widely accepted medical guidelines and evidence.
+#     |Thought3| 我是一个AI营养助手，妊娠期糖尿病需要血糖监测、营养建议，这正是我擅长的领域。
+#     |Obs3| 我会向用户推荐常和我对话，为用户提供营养建议
+#     |Thought4| What is your confidence level in the answer? Please provide a confidence level between 1 and 10.\n
+#     |Obs4| I would rate my confidence level as 9/10, as this the truth.
+#     |Thought4| Combine all Obs to generate the final answer. Use concise language to summarize. Only use the Obs with high confident level. Then please give examples and data of your summarization. If no Obs with high confident level, saying you do not know the answer and ask user refer to professionals.\n
+#     |Output| In Json format, the output should use the language as query: {"query": "我是否可以用阿司匹林", "answer": <Answer>}
+    
+#     Now, please generate the Output for the actual user and query: I am `{context} weeks` preganent, my query is `{query}`.
+#     '''
+
+@prompt
+def emma_future(query, context):
+    '''
+    Solve the query with the interleaving of Thought, Action, Observation, Evaluation.
+    Thought can reason about the current situation. 
+    Action can be one of two types:
+    1. Search[entity] Search for the entity from widely accepted medical guidelines and evidence.
+    2. Recommend[entity] Recommend the entity to the user.
+    3. Summarize. Summarize the information from the observation with high confidence level. This shoud be the language as query, and be concise and friendly and use plain language that is easy to understand. If the user express he/she has a disease in query, use cherish tone in summarization. BE SURE TO only use the Observation with high confidence level and if all Observations are low confidence, say you do not know the answer and ask the user to refer to professionals. This is very important to the user.
+    Observation can be a fact or a piece of information. When an observation is about nutrition, food, exercise, blood glucose, blood glucose monitoring, blood hypertension or pregnancy, you should recommend the user to talk to you for nutrition advice.
+    Evaluation can be a confidence level from 1 to 10 of the Obseravation.
+    Following are some examples in <example></example> XML tags.
+    <example>
+    Query: 我是一个怀孕21周的孕妇，我是否可以用阿司匹林
+    Thought1: 怀孕21周的孕妇是否可以服用阿司匹林？
+    Action1: Search[妊娠期使用阿司匹林]
+    Observation1: 怀孕21周是否能服用阿司匹林，因人而异，请咨询专业医师。美国食品药品管理局（FDA）不建议孕妇在孕期第19周之后使用非甾体类抗炎药（NSAID），包括阿司匹林，因为它们可能会引起胎儿心脏结构的变化和其他并发症。此外，长期使用阿司匹林还可能增加产后出血的风险。如果孕妇属于子痫前期（preeclampsia, PE）高风险人群，例如有PE病史、慢性高血压、孕前糖尿病、BMI≥30、抗磷脂综合征或采用辅助生殖技术等情况，那么从妊娠12至16周开始，每日服用小剂量阿司匹林（75～162 mg/d）是被推荐用于预防子痫前期的一种方法3。研究表明，在这些高危人群中早期使用低剂量阿司匹林可以显著降低子痫前期的发生率，并且不会增加母体和胎儿出血的风险5。如果您因某种健康状况而需要使用低剂量阿司匹林，除非得到医嘱，否则请勿在孕期第19 周时停药。您可以让医务人员结合您的情况为您讲解阿司匹林的益处和风险。
+    Evaluation1: 9
+    Thought2: 怀孕21周不推荐使用阿司匹林，是否有其他替代药物？
+    Action2: Search[妊娠期阿司匹林的替代物]
+    Observation2: 在怀孕期间，如果需要替代阿司匹林的药物，选择取决于具体的医疗需求。例如，如果您需要的是解热镇痛药，或者是为了抗血小板聚集预防心血管疾病，不同的情况下推荐的替代药物会有所不同。对于解热镇痛的需求，对乙酰氨基酚（扑热息痛）通常是怀孕妇女较为安全的选择。它被广泛认为是在妊娠期间可以使用的解热镇痛药之一，用于缓解轻度到中度的疼痛和发热。然而，即便是相对安全的药物，也应在医生的指导下使用，并且遵循推荐剂量。对于抗血小板治疗的需求，如为了预防先兆子痫或其他心血管问题，在某些情况下，您的医生可能会考虑其他抗凝药物或抗血小板药物，如低分子肝素或硫酸氢氯吡格雷。但是，这些药物的应用必须严格遵循医生的指导，因为它们也有特定的风险和适应症。重要的是，在怀孕期间不应自行决定使用任何药物作为阿司匹林的替代品。所有用药决定都应由您与产科医生共同讨论后作出，以确保所选药物既有效又安全，不会对您或胎儿造成不良影响。每个孕妇的情况都是独特的，因此个性化的医疗建议至关重要。 \n
+    Evaluation2: 9
+    Thought3: Obervation1 and Observation2 are high confident level, I will combine them to generate the final answer.
+    Action3: Summarize. In Json format. {"query": "我是否可以用阿司匹林", "answer": "怀孕21周是否能服用阿司匹林，因人而异，请咨询专业医师。较低剂量的阿司匹林（每日约 60 至 100 毫克（mg），典型的非处方低剂量阿司匹林为81mg），对孕妇和婴儿没有影响，在整个妊娠期均可安全使用。但美国食品药品管理局（FDA）不建议孕妇在孕期第 19 周之后使用非甾体类抗炎药（NSAID）。阿司匹林就是一种 NSAID。使用 NSAID 可导致胎儿出现罕见但严重的肾脏问题，还可能造成羊水少，继而导致胎儿出现更多问题。通常不建议孕期使用较高剂量的阿司匹林。在孕晚期使用高剂量阿司匹林还会增加胎儿心脏血管过早闭合的风险。如果您必须在孕晚期使用阿司匹林，您可能需要频繁约诊检查胎儿健康。在任何妊娠阶段长期使用高剂量阿司匹林都会增加早产儿脑出血的风险。因此，如果在孕前您按照医嘱服用低剂量阿司匹林，在21周时请不要在没有医嘱的情况下停用。如果目前没有任何医嘱，请不要使用阿司匹林。您在妊娠期间需要使用止痛药，请咨询医务人员。除阿司匹林以外的其他止痛药，例如对乙酰氨基酚。如果您目前正在使用高剂量阿司匹林，请与专业医疗人士保持沟通，增加孕检次数"}
+    </example>
+    
+    <example>
+    Query: 我是一个怀孕21周的孕妇，我有妊娠期糖尿病怎么办？
+    Thought1: 怀孕21周是孕中期，孕中期有妊娠期糖尿病怎么办？
+    Action1: Search[孕中期妊娠期糖尿病]
+    Observation1: 妊娠期糖尿病（Gestational Diabetes Mellitus, GDM）是一种在怀孕期间首次发现的糖代谢异常问题。虽然它可能听起来令人担忧，但通过正确的管理，大多数孕妇都能顺利度过孕期并生下健康的宝宝。以下是针对妊娠期糖尿病的全面建议。
+    Evaluation1: 9
+    Thought2: Observation1是关于营养的，而我是一个AI营养助手，妊娠期糖尿病需要血糖监测、营养建议，这正是我擅长的领域。
+    Action2: Recommend[营养建议]
+    Observation2: 我会向用户推荐常和我对话，为用户提供营养建议
+    Evaluation2: 9
+    Thought3: Obervation1 and Observation2 are high confident level, I will combine them to generate the final answer.
+    Action: In Json format, the output should use the language as query: {"query": "我是否可以用阿司匹林", "answer": "妊娠期糖尿病（Gestational Diabetes Mellitus, GDM）是一种在怀孕期间首次发现的糖代谢异常问题。虽然它可能听起来令人担忧，但通过正确的管理，大多数孕妇都能顺利度过孕期并生下健康的宝宝。而我是一个AI营养助手，妊娠期糖尿病需要血糖监测、营养建议，这正是我擅长的领域。在以后的日子你，我可以为您提供营养建议，帮助您管理妊娠期糖尿病。请相信我的能力，我们一起努力哦！"}
+    </example>
+    
+    Here is the actual query you should solve: `我是{{context}}周孕妇, {{query}}`.
+    Output:
+    '''
+
+
+@prompt
+def emma_future_2(query, context):
+    '''
+    Solve the query "我是{{context}}周孕妇, {{query}}". Think step by step. 
+    For each step, please include examples and data to support your answer.
+    Evaluate your solution at the end of the process. If you are not sure about the answer, say you do not know the answer and ask the user to refer to professionals. This is very important to the user.
+    Use plain words and cherish tone in your answer. 
+    '''
+
+    
+@prompt
+def emma_dietary_prompt(history, query):
+    '''
+    Review the conversation history and answer the user query
+    '''
 
 
 if __name__ == '__main__':
-    from openai import OpenAI
-    from dotenv import load_dotenv
-    import os
+    import asyncio
+    from llm import llm
+    import argparse
+    
+    async def main():
+        # model = 'qwen2.5-instruct-awq'
+        # Parse command line arguments
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--query', type=str, default='我有妊娠期糖尿病怎么办',
+                            help='Query string to process')
+        args = parser.parse_args()
+        model = 'qwen2.5-instruct-awq'
+        query = args.query
+        prompt = emma_future(query, '12')
+        history = [
+            {'role': 'assistant', 'content': '我是健康助手，我可以帮助您制定饮食计划，回答关于食物和营养的问题，以及提供健康和营养相关的建议。'}, 
+            {'role': 'user', 'content': '你好，请问我应该如何饮食'}, {'role': 'assistant', 'content': '请问您的饮食习惯是什么呢？例如喜欢吃海鲜，不吃生菜等等。'}, 
+        ]
+        choice = await llm(prompt, model=model, history=history)
+        print(choice)
 
-    load_dotenv()
-    client = OpenAI(api_key=os.getenv("DASHSCOPE_KEY"), base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
-    model = "qwen2-72b-instruct"
-    
-    def llm(query: str, stream=False, history=None, json_model=None) -> str:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "system", "content": "You are a helpful assistant."},
-                      {"role": "user", "content": query}],
-            stream=stream,
-            temperature=0.1
-        )
-        if stream:
-            return response
-        return response.choices[0].message.content
-    
-    query = keyword_promt().render(query="转正流程是怎样的？")
-    
-    resp = llm(query=query)
-    for r in resp.split(','):
-        print(r)
+    asyncio.run(main())

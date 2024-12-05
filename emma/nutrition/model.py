@@ -38,3 +38,22 @@ class DietaryData(BaseModel):
 class EmmaComment(BaseModel):
     comment: str
     advice: str = ''
+    
+    
+class UserPreference(BaseModel):
+    pork: int = 0
+    beef: int = 0
+    chicken: int = 0
+    seafood: int = 0
+    vegetable: int = 0
+    fruit: int = 0
+    dairy: int = 0
+    grain: int = 0
+    oil: int = 0
+    salt: int = 0
+    sugar: int = 0
+    offal: int = 0
+    rice: int = 0
+    noodles: int = 0
+    bread: int = 0
+    nuts: int = 0

@@ -29,8 +29,8 @@ class BaseModel(Model):
 class MealData(BaseModel):
     id = AutoField(primary_key=True)
     userid = CharField(max_length=255)
-    url = CharField(max_length=2047)
     type = IntegerField()
+    url = BinaryJSONField()
     nutrient = BinaryJSONField()
     emma = BinaryJSONField(null=True)
     created_at = DateTimeField(default=datetime.datetime.now)
@@ -83,11 +83,30 @@ class Emma(BaseModel):
     updated_at = DateTimeField()
     
     
+class UserNutrition(BaseModel):
+    id = AutoField(primary_key=True)
+    userid = CharField(max_length=255)
+    macro = BinaryJSONField()
+    micro = BinaryJSONField()
+    mineral = BinaryJSONField()
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField()
+    
+    
 class DietaryData(BaseModel):
     id = AutoField(primary_key=True)
     userid = CharField(max_length=255)
     days = IntegerField()
     dietary = BinaryJSONField()
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField()
+    
+    
+class UserPreference(BaseModel):
+    id = AutoField(primary_key=True)
+    userid = CharField(max_length=255)
+    appetite = IntegerField(null=True)
+    preference = BinaryJSONField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField()
     

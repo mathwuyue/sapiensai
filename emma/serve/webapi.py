@@ -1,37 +1,25 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, status
-from datetime import datetime
-from serve.db import UploadFile  # Assuming db.py is in the same directory
+from datetime import datetime, timedelta
+from typing import Optional
+from serve.db import UploadFile
+from db import UserHistory
 import uuid
 import random
 import string
 from serve.engine import Query, workflow
 import redis
 import dotenv
-import os
 from llm import chunk_to_dict
 from serve.model import UploadFileRequest, FileStatusResponse, ChatRequest, ChatSessionRequest, ChatSessionResponse
 from history import generate_unique_session_id, delete_session
-import logging
+from logger import file_perf_handler as logger
 import time
-from pathlib import Path
+import traceback
+
 
 dotenv.load_dotenv()
 router = APIRouter()
 
-# Configure logging
-log_dir = Path.home() / 'logs'
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',  # Add datefmt parameter for time format
-    handlers=[
-        logging.FileHandler(
-            filename=log_dir / 'perf.log',
-            encoding='utf-8',
-        )
-    ]
-)
-logger = logging.getLogger(__name__)
 
 # init redis set chat key 'fp' to random a-zA-Z0-9 string
 def generate_random_string(length=4):
@@ -132,7 +120,7 @@ async def chat_endpoint(websocket: WebSocket):
     This is the endpoint for cloud chat completions. Later maybe move to Ray Serve
     '''
     await websocket.accept()
-    logger.info("Websocket打开，等待数据")  # Add log message
+    # logger.info("Websocket打开，等待数据")  # Add log message
     start = time.time()
     is_data_recv_first = True
     try:
@@ -150,7 +138,7 @@ async def chat_endpoint(websocket: WebSocket):
             if is_data_recv_first:
                 is_data_recv_first = False
                 end = time.time()
-                logger.info(f"Websocket完成接收数据，耗时{end - start:.2f}秒")  # Add log message
+                # logger.info(f"Websocket完成接收数据，耗时{end - start:.2f}秒")  # Add log message
             chat_request = ChatRequest(**data)
             config = {
                 'user_id': chat_request.user_id,
@@ -171,7 +159,7 @@ async def chat_endpoint(websocket: WebSocket):
                 if is_first_chunk:
                     is_first_chunk = False
                     end = time.time()
-                    logger.info(f"完成生成第一个chunk，开始传输数据。耗时{end - start:.2f}秒")
+                    # logger.info(f"完成生成第一个chunk，开始传输数据。耗时{end - start:.2f}秒")
                 resp_chunk = chunk_to_dict(chunk)
                 resp_chunk['user_id'] = chat_request.user_id
                 resp_chunk['session_id'] = str(chat_request.session_id)
@@ -180,10 +168,53 @@ async def chat_endpoint(websocket: WebSocket):
             logger.info(f"Websocket完成传输数据，传输耗时{end2 - end:.2f}秒，总耗时{end2 - start:.2f}秒")
     except WebSocketDisconnect:
         print("Client disconnected")
-    # except Exception as e:
-    #     print(str(e))
-    #     await websocket.close(code=status.WS_1000_NORMAL_CLOSURE, reason=str(e))
-        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        print("Traceback:")
+        print(traceback.format_exc())
+        await websocket.close(code=status.WS_1000_NORMAL_CLOSURE, reason=str(e))
+ 
+ 
+@router.get("/v1/chat/history")
+async def get_chat_history(
+    user_id: str, 
+    session_id: str,
+    date: Optional[str] = None,
+    offset: Optional[int] = None
+):
+    try:
+        # Start with base query
+        query = (UserHistory
+                .select()
+                .where(
+                    (UserHistory.user_id == user_id) & 
+                    (UserHistory.session_id == session_id) &
+                    (UserHistory.is_deleted == False)
+                ))
+
+        # Add date filtering if parameters provided
+        if date and offset:
+            try:
+                end_date = datetime.strptime(date, '%Y-%m-%d')
+                start_date = end_date - timedelta(days=offset)
+                query = query.where(
+                    (UserHistory.created_at >= start_date) &
+                    (UserHistory.created_at <= end_date)
+                )
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid date format. Use YYYY-MM-DD"
+                )
+        # Execute query and return results
+        history = list(query.order_by(UserHistory.created_at).dicts())
+        return {"status": 1, "history": history}
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        print("Traceback:")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
+ 
         
 def init_app(app):
     app.include_router(router)
