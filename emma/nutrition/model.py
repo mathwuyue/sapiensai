@@ -40,13 +40,16 @@ class EmmaComment(BaseModel):
     advice: str = ''
     
     
-class UserPreference(BaseModel):
+class UserPreferenceData(BaseModel):
+    appetite: int = 0
     pork: int = 0
     beef: int = 0
     chicken: int = 0
     seafood: int = 0
     vegetable: int = 0
     fruit: int = 0
+    milk: int = 0
+    soymilk: int = 0
     dairy: int = 0
     grain: int = 0
     oil: int = 0
@@ -57,3 +60,5 @@ class UserPreference(BaseModel):
     noodles: int = 0
     bread: int = 0
     nuts: int = 0
+    prefer: str = ''
+    dislike: str = ''

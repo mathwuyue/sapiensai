@@ -6,9 +6,11 @@ import traceback
 import orjson
 from llm import llm
 from prompt import get_food_nutrients_prompt
-from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, EmmaComment, DietaryData, DietarySummary
-from logger import file_error_logger
+from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, EmmaComment, DietaryData, DietarySummary, UserPreferenceData
+from nutrition.db import UserPreference
+from fastapi import HTTPException
 from utils import extract_json_from_text
+from logger import file_error_handler as err_logger
 
 
 async def analyze_food(image_base64: str) -> list[NutritionMacro, NutritionMicro, NutritionMineral]:
@@ -68,6 +70,8 @@ async def dietary_recommendation(basicinfo: dict, glu: list, meals: list, orig_p
     try:
         return await llm(prompt, model='qwen-vl-max', temperature=0.1)
     except Exception as e:
+        error_traceback = traceback.format_exc()
+        err_logger.error(f"Failed to get user preferences: {str(e)}\n{error_traceback}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate dietary recommendation: {str(e)}"
@@ -84,7 +88,6 @@ def cal_calories_gdm(bmi: float, weight: float, is_twins: bool, trimester: int) 
         calories = (30 - 5 / 3.9 * (bmi - 24)) * weight + addon
     else:
         calories = 25 * weight + addon
-    
     if trimester <= 12:
         if calories < 1600:
             calories = 1600
@@ -94,5 +97,42 @@ def cal_calories_gdm(bmi: float, weight: float, is_twins: bool, trimester: int) 
     return calories
 
 
-def 
-             
+def set_user_preferences(user_id: str, preferences: UserPreferenceData) -> None:
+    try:
+        # Serialize preferences to dictionary
+        preferences_dict = preferences.model_dump()
+        # Extract appetite from preferences
+        appetite = preferences.appetite
+        user_pref, created = UserPreference.get_or_create(userid=user_id, defaults={'preference': preferences_dict, 'appetite': appetite})
+        if not created:
+            user_pref.preference = preferences_dict
+            user_pref.appetite = appetite
+            user_pref.save()
+    except Exception as e:
+        error_traceback = traceback.format_exc()
+        err_logger.error(f"Failed to get user preferences: {str(e)}\n{error_traceback}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate dietary recommendation: {str(e)}"
+        )
+        
+        
+def get_user_preferences(user_id: str) -> UserPreferenceData:
+    try:
+        user_pref = UserPreference.get(UserPreference.id == user_id)
+        return UserPreferenceData(**user_pref.preference)
+    except Exception as e:
+        error_traceback = traceback.format_exc()
+        err_logger.error(f"Failed to get user preferences: {str(e)}\n{error_traceback}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate dietary recommendation: {str(e)}"
+        )
+        
+
+async def get_basicinfor():
+    pass
+
+
+async def get_glu():
+    pass

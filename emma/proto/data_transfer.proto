@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message DataPacket {
+    bytes data = 1;
+}
+
+message SendResponse {
+    string status = 1;
+}
+
+service DataTransfer {
+    rpc SendData(DataPacket) returns (SendResponse) {}
+}

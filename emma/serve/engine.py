@@ -18,6 +18,7 @@ import time
 
 
 dotenv.load_dotenv()
+model = 'qwen2.5-instruct-awq'
 
 
 class Query(BaseModel):
@@ -30,17 +31,24 @@ class ChatConfig(BaseModel):
     user_meta: Dict[str, Any]
     event_id: str
     organization: str
+    
+    
+user_intents = [
+    'Input required information',
+    'Ask for dietary recommendations',
+    'Ask questions about food / nutrition',
+    'Topics related to health, medicine, and symptoms',
+    'Topics related to exercise and fitness',
+    'Chat about feelings, emotions, personal life, tastes, preferences, situations, experiences, relationships and other personal topics',
+]
 
 
 async def workflow(query: Query, config: str, websocket) -> str:
-    '''
-    TODO: Only support single round conversation. Future should be async and support multi-round conversation.
-    '''
     # TODO: event_id should be generated only for a new conversation
     r = redis.Redis()
     event_id = 'chatcmpl-' + r.get('fp').decode() + '-' + str(r.incr('event_num'))
     config['event_id'] = event_id
-
+    config['model'] = model
     router = OptionRouter(model, router_options, config)
     question = query.content
     agentcls, choice = router.classify(question)
@@ -51,7 +59,7 @@ async def workflow(query: Query, config: str, websocket) -> str:
         context, context_meta = agent.rag(question)
         ref_resp = build_context_resp(context, context_meta, event_id, config)
         if ref_resp:
-            await websocket.send_json(ref_resp)
+            
     else:
         config['answer'] = '您好！我是您的物资问题助手，关于物资相关的问题，如发票、采购等，我都能尽量帮您解决。但是别的问题我不懂，不能回复，不好意思哦。'
         agent = agentcls(config=config)

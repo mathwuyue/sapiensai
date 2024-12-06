@@ -5,7 +5,7 @@ from datetime import datetime
 from litellm import acompletion
 import asyncio, traceback
 import time
-from logger import file_error_logger as error_logger
+from logger import file_error_handler as error_logger
 
 
 load_dotenv()
@@ -30,7 +30,7 @@ LLM_PROVIDER = {
 }
 
 
-async def llm(query: str, model: str = 'gpt-4o-mini', stream=False, temperature=0.85, top_p=0.8, history=[], json_format=None) -> str:
+async def llm(query: str, model: str = os.getenv('MODEL'), stream=False, temperature=0.85, top_p=0.8, history=[], json_format=None) -> str:
     messages = history + [{"role": "user", "content": query}]
     llm_provider = LLM_PROVIDER.get(model, None)
     try:
@@ -70,7 +70,7 @@ async def llm(query: str, model: str = 'gpt-4o-mini', stream=False, temperature=
     except Exception as e:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         error_msg = f"{timestamp} - Model: {model} - Error: {str(e)}\n{traceback.format_exc()}"
-        error_logger.error(error_msg)
+        error_logger.errors(error_msg)
         print(error_msg)
 
 

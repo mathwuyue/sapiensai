@@ -9,7 +9,7 @@ from utils import extract_json_from_text
 
 class RouterOptions(BaseModel):
     options: List[str]
-    actions: Dict[str, Type[Agent]]
+    actions: Type[Agent] = None
 
 
 class Router:
@@ -24,12 +24,12 @@ class Router:
         pass
 
 
-class OptionRouter(Router):
+class UserIntentionRouter(Router):
     def __init__(self, model, options: RouterOptions, config: Dict):
         super().__init__(model, config)
         self.options = options
         
-    def classify(self, query):
+    async def classify(self, query):
         # get history from redis
         histories = get_history(self.user_id, self.session_id, self.user_meta)
         if not histories:
@@ -38,7 +38,7 @@ class OptionRouter(Router):
             histories = histories.history
         prompt = router_prompt(self.options, query, histories)
         # connect to llm and get the choice
-        choice = llm(prompt)
+        choice = await llm(prompt, history=histories)
         choice = choice.strip("'\"")  # Remove any quotes from the choice
         agent = self.options.actions[choice]
         return agent, choice

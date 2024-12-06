@@ -146,14 +146,16 @@ def rerank_prompt():
 
 
 @prompt
-def router_prompt(choices, query, reject):
+def router_prompt(choices, query, description):
     '''
         Reveiw the conversation history, classify user's current query as either being about 
         {% for choice in choices %}
         `{{ loop.index }}. {{ choice }}\n`, 
         {% endfor %}.
-        1. If the query is about one of the choices, output the choice index in the json format `{ "choice": int }`.
-        2. If the query is not about any of the choices, write a message saying you CANNOT answer the question in a polite way, according to `{{ reject }}` and the conversation history. Output the message in the json format `{ "message": "string" }`.
+        1. If the query is about one of the choices, output the choice index in the json format `{ "choice": int }`. \n
+        2. If the query is not about any of the choices, follow the instructions to write the response message. Output the message in the json format `{ "message": "string" }`:
+            i. If query is requiring general information, write a message introducing yourself according to {{ description }} and saying you CANNOT answer the question. Output the message in the json format `{ "message": "string" }`.
+            ii. Otherwise, respond in a friendly manner, introduce yourself according to {{ description }} and guide user to interact with you. Output the message in the json format `{ "message": "string" }`.
         <query> {{ query }} </query> 
         Classification:
     '''

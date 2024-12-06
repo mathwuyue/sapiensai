@@ -23,6 +23,7 @@ class AgentConfig(BaseModel):
 
 
 class Agent:
+    """TODO: add memory for agents"""
     def __init__(self, config: AgentConfig, description: str = '') -> None:
         self.config = config
         self.description = description

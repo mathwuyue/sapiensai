@@ -172,7 +172,7 @@ async def chat_endpoint(websocket: WebSocket):
         print(f"Error: {str(e)}")
         print("Traceback:")
         print(traceback.format_exc())
-        await websocket.close(code=status.WS_1000_NORMAL_CLOSURE, reason=str(e))
+        await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason=str(e))
  
  
 @router.get("/v1/chat/history")

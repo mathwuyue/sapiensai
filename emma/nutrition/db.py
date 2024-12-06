@@ -103,6 +103,7 @@ class DietaryData(BaseModel):
     
     
 class UserPreference(BaseModel):
+    """tblname: """
     id = AutoField(primary_key=True)
     userid = CharField(max_length=255)
     appetite = IntegerField(null=True)

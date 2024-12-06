@@ -19,7 +19,7 @@ file_error_handler.setLevel(logging.ERROR)
 
 # Create formatter with custom format and date format
 formatter = logging.Formatter(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
