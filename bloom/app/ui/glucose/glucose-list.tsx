@@ -189,7 +189,6 @@ const handleEdit = async (data: { value: number; type: number; date: string }) =
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Time</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Value (mmol/L)</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -201,9 +200,7 @@ const handleEdit = async (data: { value: number; type: number; date: string }) =
                 <TableCell>
                   {new Date(reading.date).toLocaleDateString()}
                 </TableCell>
-                <TableCell>
-                  {new Date(reading.date).toLocaleTimeString()}
-                </TableCell>
+                
                 <TableCell>
                   {GLUCOSE_TYPES[reading.type]}
                 </TableCell>
