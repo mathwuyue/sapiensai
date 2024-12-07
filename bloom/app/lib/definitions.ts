@@ -1,6 +1,6 @@
 export type Glucose = {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   glucose_value: number;
   glucose_date: Date;
   measurement_type: string;

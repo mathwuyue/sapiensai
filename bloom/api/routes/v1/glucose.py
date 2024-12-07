@@ -60,6 +60,24 @@ async def read_glucose(
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return glucose_record
 
+# @router.put("/{glucose_id}", response_model=Glucose)
+# async def update_glucose(
+#     *,
+#     db: AsyncSession = Depends(get_db),
+#     glucose_id: int,
+#     glucose_in: GlucoseUpdate,
+#     current_user: User = Depends(get_current_user)
+# ):
+#     """
+#     Update glucose record.
+#     """
+#     glucose_record = await glucose.get(db, id=glucose_id)
+#     if not glucose_record:
+#         raise HTTPException(status_code=404, detail="Glucose record not found")
+#     if glucose_record.patient_id != current_user.id:
+#         raise HTTPException(status_code=403, detail="Not enough permissions")
+#     glucose_record = await glucose.update(db, db_obj=glucose_record, obj_in=glucose_in)
+#     return glucose_record
 @router.put("/{glucose_id}", response_model=Glucose)
 async def update_glucose(
     *,
@@ -71,13 +89,23 @@ async def update_glucose(
     """
     Update glucose record.
     """
-    glucose_record = await glucose.get(db, id=glucose_id)
-    if not glucose_record:
-        raise HTTPException(status_code=404, detail="Glucose record not found")
-    if glucose_record.patient_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    glucose_record = await glucose.update(db, db_obj=glucose_record, obj_in=glucose_in)
-    return glucose_record
+    try:
+        glucose_record = await glucose.get(db, id=glucose_id)
+        if not glucose_record:
+            raise HTTPException(status_code=404, detail="Glucose record not found")
+        if glucose_record.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+            
+        glucose_record = await glucose.update(
+            db=db,
+            db_obj=glucose_record,
+            obj_in=glucose_in
+        )
+        return glucose_record
+        
+    except Exception as e:
+        print(f"Update error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.delete("/{glucose_id}", response_model=Glucose)
 async def delete_glucose(
@@ -92,7 +120,7 @@ async def delete_glucose(
     glucose_record = await glucose.get(db, id=glucose_id)
     if not glucose_record:
         raise HTTPException(status_code=404, detail="Glucose record not found")
-    if glucose_record.patient_id != current_user.id:
+    if glucose_record.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     glucose_record = await glucose.remove(db, id=glucose_id)
     return glucose_record
