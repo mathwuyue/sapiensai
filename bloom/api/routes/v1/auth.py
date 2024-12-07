@@ -7,10 +7,16 @@ from ...schemas.user import Token, UserInDB, UserCreate
 from ...crud.user import user
 from ...db.session import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user_id: str
+
+@router.post("/login", response_model=TokenResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
@@ -34,7 +40,11 @@ async def login(
     access_token = create_access_token(
         subject=user_obj.id, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": str(user_obj.id)
+    }
 
 @router.post("/register", response_model=UserInDB)
 async def register(
