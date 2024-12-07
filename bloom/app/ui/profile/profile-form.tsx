@@ -49,15 +49,12 @@ export default function ProfileForm() {
       const profile = await getProfile();
       setFormData(profile);
       if (profile.conditions) {
-        console.log("Profile conditions:", profile.conditions);
         const conditions = profile.conditions.map((condition) => ({
           id: condition.preset_condition_id.toString(),
           severity: condition.level,
         }));
-        console.log("Mapped conditions:", conditions);
         setSelectedConditions(conditions);
       } else {
-        console.log("No conditions found");
       }
     };
     loadProfile();

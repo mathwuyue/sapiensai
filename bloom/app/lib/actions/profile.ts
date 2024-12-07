@@ -86,7 +86,6 @@ export async function createProfile(prevState: State, formData: FormData) {
       message: "Please correct the errors and try again."
     };
   }
-  console.log(validatedFields.data);
   try {
     const session = await auth();
     const response = await fetch(`${URL}/profile`, {
@@ -125,8 +124,5 @@ export async function getProfile() {
     throw new Error("Failed to fetch profile");
   }
   const data = await response.json();
-  console.log('Profile data from API:', data);
-  console.log('Conditions:', data.conditions);
-  console.log('Complications:', data.complications);
   return data;
 }
