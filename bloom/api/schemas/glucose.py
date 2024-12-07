@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional, List
+from pydantic.config import ConfigDict
 
 # shared properties
 class GlucoseBase(BaseModel):
@@ -25,6 +26,9 @@ class Glucose(GlucoseBase):
 
     class Config:
         from_attributes = True
+        json_encoders = {
+            int: str
+        }
 
 class GlucoseReadingResponse(BaseModel):
     datetime: date

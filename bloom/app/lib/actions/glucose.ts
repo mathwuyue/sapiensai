@@ -1,4 +1,4 @@
-"use server";
+'use server'
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -78,6 +78,7 @@ export async function createGlucoseReadings(prevState: State, formData: FormData
 export async function fetchGlucoseReadings(): Promise<Glucose[]> {
   try {
     const session = await auth();
+    
     const response = await fetch(`${URL}/glucose/`, {
       method: 'GET',
       headers: {
@@ -91,7 +92,9 @@ export async function fetchGlucoseReadings(): Promise<Glucose[]> {
       return [];
 
     }
-    return response.json();
+    const data = await response.json();
+    console.log("data--------------------", data);
+    return data;
 
   } catch (error) {
     console.log(error);
@@ -102,4 +105,115 @@ export async function fetchGlucoseReadings(): Promise<Glucose[]> {
   //return response.json();
   //delete
   
-  //put
+  //
+  export async function deleteGlucoseReading(id: string) {
+    try {
+      const session = await auth();
+
+      const fullUrl = `${URL}/glucose/${id}`;
+      console.log({
+        url: fullUrl,
+        id: id,
+
+        method: "DELETE",
+        token: session?.accessToken?.substring(0, 10) + "..." 
+      }); 
+  
+      const response = await fetch(`${URL}/glucose/${id}`, {
+        method: "DELETE",  
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.accessToken}`,
+        },
+        credentials: "include",
+      });
+      
+  
+      if (!response.ok) {
+        const text = await response.text();
+        console.log("Error response:", text);
+        throw new Error(text || "Failed to delete glucose reading"); 
+      }
+      
+      revalidatePath("/dashboard");
+
+    } catch (error) {
+      console.error("Error deleting glucose reading:", error);
+      throw error;
+    }
+  }
+  // export async function updateGlucoseReading( id: string, 
+  //   data: { value: number; type: number; date: string }
+  // ) {
+  //   try {
+  //     const session = await auth();
+
+  //     const fullUrl = `${URL}/glucose/${id}`;
+  //     console.log({
+  //       url: fullUrl,
+  //       id: id,
+  //       method: "PUT",
+  //       token: session?.accessToken?.substring(0, 10) + "..." // 只打印token的一部分
+  //     }); 
+  
+  //     const response = await fetch(`${URL}/glucose/${id}`, {
+  //       method: "PUT",  
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "Authorization": `Bearer ${session?.accessToken}`,
+  //       },
+  //       credentials: "include",
+  //       body: JSON.stringify(data),
+
+  //     });
+      
+  
+  //     if (!response.ok) {
+  //       const text = await response.text();
+  //       console.log("Error response:", text);
+  //       throw new Error(text || "Failed to update glucose reading"); 
+  //     }
+      
+  //     revalidatePath("/dashboard/glucose");
+  //     redirect("/dashboard/glucose");
+
+
+  //   } catch (error) {
+  //     console.error("Error updating glucose reading:", error);
+  //     throw error;
+  //   }
+    
+  // }
+  export async function updateGlucoseReading(
+    id: string, 
+    
+    data: { value: number; type: number; date: string }
+  ) {
+    const session = await auth();
+    const response = await fetch(`${URL}/glucose/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${session?.accessToken}`,
+
+      },
+      body: JSON.stringify({
+        glucose_value: Number(data.value),      // 修改字段名以匹配后端
+        measurement_type: Number(data.type),    // 修改字段名以匹配后端
+      glucose_date: data.date
+      })
+    });
+  
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+  
+    revalidatePath('/dashboard/glucose');
+    //redirect('/dashboard/glucose');
+    return response.json();
+
+  }
+
+  // const [glucoseData, setGlucoseData] = useState<FormattedGlucose[] | null>(null);
+  // const [editingGlucose, setEditingGlucose] = useState<FormattedGlucose | null>(null);
+  // const [editData, setEditData] = useState<{ value: number; type: number; date: string } | null>(null);

@@ -18,8 +18,10 @@ import {
 import { Glucose } from "@/app/lib/definitions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { fetchGlucoseReadings } from "@/app/lib/actions/glucose";
+import { fetchGlucoseReadings,deleteGlucoseReading } from "@/app/lib/actions/glucose";
 import { useEffect, useState, } from "react";
+import { ArrowRight } from "lucide-react";
+import React from "react";  
 
 interface FormattedGlucose {
   value: number;
@@ -30,32 +32,32 @@ interface FormattedGlucose {
 
 const data: Glucose[] = [
   {
-    id: 1,
-    user_id: 1,
+    id: "1",
+    user_id: "1",
     glucose_value: 95,
     glucose_date: new Date("2024-01-01T08:00:00"),
     measurement_type: "fasting",
     notes: "Morning reading",
   },
   {
-    id: 2,
-    user_id: 1,
+    id: "2",
+    user_id: "1",
     glucose_value: 145,
     glucose_date: new Date("2024-01-01T13:00:00"),
     measurement_type: "after_meal",
     notes: "After lunch",
   },
   {
-    id: 3,
-    user_id: 1,
+    id: "3",
+    user_id: "1",
     glucose_value: 110,
     glucose_date: new Date("2024-01-02T08:00:00"),
     measurement_type: "fasting",
     notes: "Morning reading",
   },
   {
-    id: 4,
-    user_id: 1,
+    id: "4",
+    user_id: "1",
     glucose_value: 160,
     glucose_date: new Date("2024-01-02T19:00:00"),
     measurement_type: "after_meal",
@@ -96,7 +98,6 @@ export default function GlucoseCard() {
         const sortedData = formattedData.sort((a, b) => {
           // 首先按日期排序
           const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
-          // 如果日期相同，则按type排序
           if (dateCompare === 0) {
             return a.type - b.type;
           }
@@ -105,7 +106,7 @@ export default function GlucoseCard() {
 
         setGlucoseData(sortedData);
 
-        console.log('Final formatted data:', formattedData); // 查看最终数据
+        //console.log('Final formatted data:', formattedData); // 查看最终数据
 
       } finally {
         setIsLoading(false);
@@ -116,9 +117,21 @@ export default function GlucoseCard() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Glucose</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+      <CardTitle>Glucose</CardTitle>
+      <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end">
+            <span className="text-sm text-muted-foreground">All your glucose records</span>
+            <div className="h-[1px] w-16 bg-border" /> {/* 添加横线 */}
+          </div>
+          <Link href="/dashboard/glucose">
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-all duration-200">
+              <ArrowRight className="h-6 w-6 text-primary hover:translate-x-1" />
+            </Button>
+          </Link>
+        </div>
       </CardHeader>
+      
       <CardContent>
         <ChartContainer config={chartConfig}>
           <AreaChart
