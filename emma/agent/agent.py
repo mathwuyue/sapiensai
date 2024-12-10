@@ -32,7 +32,7 @@ class Agent:
     def description(self):
         return self.description
     
-    def act(self, query: str, state) -> str:
+    def act(self, query: str, state: int = 0) -> str:
         raise NotImplementedError
     
     def assign_task(self, query: str, state: int = 0, task_type: int = 0) -> str:
@@ -59,7 +59,7 @@ class Agent:
                 state=state,
             )
         except Exception as e:
-            err_logger.error(f"Failed to store history: {e}")
+            err_logger.errors(f"Failed to store history: {e}")
             raise
         
     async def _user_llm(self, query: str, model: str, history: list, temperature: float = 0.85, stream: bool = False):
@@ -93,8 +93,8 @@ class ChatAgent(Agent):
 
 
 class MemoryAgent(Agent):
-    def __init__(self, role: Dict = None, config=None) -> None:
-        super().__init__(role, config)
+    def __init__(self, config, des) -> None:
+        super().__init__(config)
         self.organization = config['organization']
         
     def memory(self, query):
@@ -102,16 +102,9 @@ class MemoryAgent(Agent):
     
 
 class NullAgent(Agent):
-    def __init__(self, role: str = None, config=None) -> None:
-        super().__init__(role, config)
-        self.user_id = config['user_id']
-        self.session_id = config['session_id']
-        self.answer = config['answer']
-    
-    def act(self, query: str) -> str:
-        print('in NullAgent')
+    async def act(self, query: str, message: str) -> str:
         created = int(time.time())
-        content = [{'role': 'assistant', 'content': ''}, {'content': self.answer}, {'content': ''}]
+        content = [{'role': 'assistant', 'content': ''}, {'content': message}, {'content': ''}]
         finish_reason = [None, None, 'stop']
         resp = [{'id': 'chatcmpl-000',
                  'object': 'chat.completion.chunk',
@@ -119,7 +112,11 @@ class NullAgent(Agent):
                  'model': model,
                  'system_fingerprint': 'fp_990915emma',
                  'choices': [{'index': 0, 'delta': d[0], 'logprobs': None, 'finish_reason': d[1]}]} for d in zip(content, finish_reason)]
-        return resp
+        # save to history
+        self._store_history('user', query)
+        self._store_history('assistant', message)
+        for chunk in resp:
+            yield chunk
     
 
 class AgentLeader(Agent):

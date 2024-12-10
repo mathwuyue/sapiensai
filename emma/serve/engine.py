@@ -3,22 +3,20 @@ import sys
 sys.path.append(os.path.abspath('..'))
 
 import dotenv
-from openai import AsyncOpenAI
-from outlines import models
-from outlines.models.openai import OpenAIConfig
-from router import OptionRouter, RouterOptions
+from router import RouterOptions, UserIntentionRouter
 from pydantic import BaseModel
-from agent.rag import RagLeader
-from agent.agent import NullAgent
-from agent.qa import QAAgent
+from agent.agent import NullAgent, AgentConfig, ChatAgent
 import redis
 from typing import Dict, Any
 import uuid
 import time
+from prompt import emma_chat, emma_future, emma_fitness, emma_nutrition
+from nutrition.emma import get_user_info
+from utils import extract_json_from_text
 
 
 dotenv.load_dotenv()
-model = 'qwen2.5-instruct-awq'
+model = os.getenv("MODEL")
 
 
 class Query(BaseModel):
@@ -34,13 +32,15 @@ class ChatConfig(BaseModel):
     
     
 user_intents = [
-    'Input required information',
-    'Ask for dietary recommendations',
-    'Ask questions about food / nutrition',
-    'Topics related to health, medicine, and symptoms',
-    'Topics related to exercise and fitness',
-    'Chat about feelings, emotions, personal life, tastes, preferences, situations, experiences, relationships and other personal topics',
+    'Ask for or in a conversation about dietary recommendations',
+    'Ask questions or in a conversation about food / nutrition',
+    'In a conversation related to health, medicine, and symptoms',
+    'In a conversation related to exercise and fitness',
+    'In a conversation about feelings, emotions, personal life, tastes, preferences, situations, experiences, relationships and other personal topics',
 ]
+
+
+options = RouterOptions(options=user_intents)
 
 
 async def workflow(query: Query, config: str, websocket) -> str:
@@ -49,21 +49,39 @@ async def workflow(query: Query, config: str, websocket) -> str:
     event_id = 'chatcmpl-' + r.get('fp').decode() + '-' + str(r.incr('event_num'))
     config['event_id'] = event_id
     config['model'] = model
-    router = OptionRouter(model, router_options, config)
+    router = UserIntentionRouter(model, options, config, '我是健康助手，我可以帮助您制定饮食计划，回答关于食物和营养的问题，以及提供健康和营养相关的建议。')
     question = query.content
-    agentcls, choice = router.classify(question)
-    if agentcls is RagLeader:
-        # TODO: evaluate config and call RagLeader
-        agent = RagLeader(config)
-        # rag context
-        context, context_meta = agent.rag(question)
-        ref_resp = build_context_resp(context, context_meta, event_id, config)
-        if ref_resp:
-            
+    choice = await router.classify(question)
+    if choice.get('message'):
+        agent = NullAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
+        return agent.act(question, choice['message'])
+    elif int(choice.get('choice')) == 1:
+        pass
+    elif int(choice.get('choice')) == 2:
+        pass    
+    elif int(choice.get('choice')) == 3:
+        emma_future_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
+        userinfo = get_user_info(config['user_id'])
+        # Extract gestational age from userinfo
+        ga_weeks = int(''.join(filter(str.isdigit, userinfo.split('Gestational Age: ')[1].split(' weeks')[0])))
+        if config['is_thought']:
+            return emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=True)
+        else:
+            response = emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=False)
+            resp_json = extract_json_from_text(response)
+            yield resp_json['answer']
+    elif int(choice.get('choice')) == 4:
+        emma_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
+        userinfo = get_user_info(config['user_id'])
+        if config['is_thought']:
+            return emma_agent.act(question, 0, 'default', emma_fitness, stream=True)
+        else:
+            response = emma_agent.act(question, 0, 'default', emma_fitness, stream=False)
+            resp_json = extract_json_from_text(response)
+            yield resp_json['message']
     else:
-        config['answer'] = '您好！我是您的物资问题助手，关于物资相关的问题，如发票、采购等，我都能尽量帮您解决。但是别的问题我不懂，不能回复，不好意思哦。'
-        agent = agentcls(config=config)
-    return agent.act(question)
+        emma_chat_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
+        return emma_chat_agent.act(question, 0, 'default', emma_chat, stream=True)
 
 
 def build_context_resp(context, context_meta, event_id, config):

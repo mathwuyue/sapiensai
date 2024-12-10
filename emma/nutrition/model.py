@@ -38,7 +38,27 @@ class DietaryData(BaseModel):
 class EmmaComment(BaseModel):
     comment: str
     advice: str = ''
-    
+
+
+class UserBasicInfo(BaseModel):
+    user_id: str
+    age: int
+    pre_weight: float
+    cur_weight: float
+    height: float
+    is_twins: bool = False
+    glu: float
+    hba1c: float
+    bph: float
+    bpl: float
+    ga: int
+    condition: str
+    cond_level: int
+    complication: str
+    execise: int
+    scripts: str = Field(default='', description="Prescribed scripts")
+    advice: str = Field(default='', description="Doctor's advice for dietary")
+  
     
 class UserPreferenceData(BaseModel):
     appetite: int = 0

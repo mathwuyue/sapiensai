@@ -136,7 +136,7 @@ class UserHistory(Model):
         database = db
         table_function = make_table_name
         indexes = (
-            (('user_id', 'session_id'), True),
+            (('user_id', 'session_id', 'is_deleted'), False),
         )
         
         

@@ -9,7 +9,7 @@ from utils import extract_json_from_text
 
 class RouterOptions(BaseModel):
     options: List[str]
-    actions: Type[Agent] = None
+    agents: List[Type[Agent]] = None
 
 
 class Router:
@@ -25,23 +25,23 @@ class Router:
 
 
 class UserIntentionRouter(Router):
-    def __init__(self, model, options: RouterOptions, config: Dict):
+    def __init__(self, model, options: RouterOptions, config: Dict, description: str = None):
         super().__init__(model, config)
-        self.options = options
+        self.options = options.options
+        self.description = description
         
     async def classify(self, query):
         # get history from redis
-        histories = get_history(self.user_id, self.session_id, self.user_meta)
+        histories = get_history(self.user_id, self.session_id, self.user_meta, limit=10)
         if not histories:
             histories = []
         else:
-            histories = histories.history
-        prompt = router_prompt(self.options, query, histories)
+            histories = histories['history']
+        prompt = router_prompt(self.options, query, self.description)
         # connect to llm and get the choice
         choice = await llm(prompt, history=histories)
-        choice = choice.strip("'\"")  # Remove any quotes from the choice
-        agent = self.options.actions[choice]
-        return agent, choice
+        choice = extract_json_from_text(choice)
+        return choice
     
     
 if __name__ == "__main__":
@@ -49,9 +49,16 @@ if __name__ == "__main__":
     import asyncio
     
     async def main():
-        options = ['Ask for dietary recommendations', 'Ask questions about food / nutritient', 'Input information required by the assistant', 'Topics related to health and nutrition', 'Topics related to exercise and fitness']
+        options = [
+            'Input required information',
+            'Ask for dietary recommendations',
+            'Ask questions about food / nutrition',
+            'Topics related to health, medicine, and symptoms',
+            'Topics related to exercise and fitness',
+            'Chat about feelings, emotions, personal life, tastes, preferences, situations, experiences, relationships and other personal topics',
+        ]
         reject = '我是健康助手，我可以帮助您制定饮食计划，回答关于食物和营养的问题，以及提供健康和营养相关的建议。'
-        query = '中国首都是那里'
+        query = '我应该如何饮食'
         prompt = router_prompt(options, query, reject)
         history = [
             {'role': 'assistant', 'content': '我是健康助手，我可以帮助您制定饮食计划，回答关于食物和营养的问题，以及提供健康和营养相关的建议。'}, 
@@ -59,6 +66,7 @@ if __name__ == "__main__":
         ]
         start = time.time()
         choice = await llm(prompt, model='qwen2.5-instruct-awq', history=history)
+        choice = extract_json_from_text(choice)
         print(choice)
         print(time.time() - start)
 

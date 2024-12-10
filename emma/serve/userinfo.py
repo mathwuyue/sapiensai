@@ -2,17 +2,14 @@ from fastapi import APIRouter, HTTPException, status
 from datetime import datetime
 from serve.db import UploadFile, User, db
 import dotenv
-from llm import llm, chunk_to_dict
 from serve.model import DietaryResponse, NutritionResponse
 import traceback
-from pathlib import Path
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 import base64
 from storage.huawei import get_file as hw_get_file
 from storage.local import get_file as local_get_file
-from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral
-from prompt import get_food_nutrients_prompt
+from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, UserBasicInfo
 from nutrition.db import MealData, ExerciseData
 from nutrition.emma import analyze_food
 
@@ -131,18 +128,7 @@ async def process_exercise(request: ExerciseRequest) -> dict:
             status_code=500, 
             detail=f"Internal server error: {str(e)}"
         )
-        
-        
-def get_meal_data(user_id: str, date: datetime, offset: int) -> list[MealData]:
-    meals = MealData.select().where(MealData.userid == user_id)
-    return meals
 
-
-def get_user_info(user_id: str) -> User:
-    user = User.get(User.userid == user_id)
-    return user
-
-def get_
 
 def init_app(app):
     app.include_router(router)

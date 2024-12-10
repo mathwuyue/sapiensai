@@ -11,7 +11,6 @@ import uuid
 class HistoryItem(BaseModel):
     role: str
     content: str
-    timestamp: Optional[str] = None
 
 
 class History(BaseModel):
@@ -30,7 +29,7 @@ def delete_session(user_id, session_id):
     UserHistory.update(is_deleted=True).where((UserHistory.user_id == user_id) & (UserHistory.session_id == session_id)).execute()
 
 
-def get_history(user_id, session_id, user_meta, limit=20):
+def get_history(user_id, session_id, user_meta, limit=40):
     '''
     Won't use user_meta in this version. Remove Redis
     '''
@@ -42,7 +41,7 @@ def get_history(user_id, session_id, user_meta, limit=20):
     ).where(
         (UserHistory.user_id == user_id) & 
         (UserHistory.session_id == session_id) &
-        (UserHistory.is_deleted.is_(False))
+        (UserHistory.is_deleted == False)
     ).order_by(
         UserHistory.created_at.desc()
     ).limit(limit)
@@ -54,13 +53,12 @@ def get_history(user_id, session_id, user_meta, limit=20):
             'history': [
                 HistoryItem(
                     role=h.role, 
-                    content=h.message, 
-                    timestamp=h.created_at.isoformat()
+                    content=h.message
                 ).model_dump()
                 for h in sorted(list(results), key=lambda x: x.created_at)
             ]
         }
-    return history if history is None else History(**history)
+    return history
 
 
 def update_history(user_id: str, session_id: str, user_meta: dict, state: str, records: HistoryItem | list[HistoryItem]) -> History:

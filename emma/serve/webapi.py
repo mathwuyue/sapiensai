@@ -12,7 +12,7 @@ import dotenv
 from llm import chunk_to_dict
 from serve.model import UploadFileRequest, FileStatusResponse, ChatRequest, ChatSessionRequest, ChatSessionResponse
 from history import generate_unique_session_id, delete_session
-from logger import file_perf_handler as logger
+from logger import logger
 import time
 import traceback
 
@@ -144,7 +144,8 @@ async def chat_endpoint(websocket: WebSocket):
                 'user_id': chat_request.user_id,
                 'user_meta': chat_request.user_meta,
                 'organization': chat_request.app_id,
-                'session_id': chat_request.session_id
+                'session_id': chat_request.session_id,
+                'is_thought': chat_request.is_thought
             }
             # print(config['organization'])
             # workflow in engine
@@ -155,7 +156,7 @@ async def chat_endpoint(websocket: WebSocket):
             start = time.time()
             response = await workflow(query, config, websocket)
             is_first_chunk = True
-            for chunk in response:
+            async for chunk in response:
                 if is_first_chunk:
                     is_first_chunk = False
                     end = time.time()
@@ -193,7 +194,7 @@ async def get_chat_history(
                  .where(
                      (UserHistory.user_id == user_id) & 
                      (UserHistory.session_id == session_id) &
-                     (UserHistory.is_deleted.is_(False))
+                     (UserHistory.is_deleted == False)
                  ))
         # Add date filtering if parameters provided
         if date and offset:

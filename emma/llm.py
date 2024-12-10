@@ -5,7 +5,7 @@ from datetime import datetime
 from litellm import acompletion
 import asyncio, traceback
 import time
-from logger import file_error_handler as error_logger
+from logger import logger
 
 
 load_dotenv()
@@ -70,7 +70,7 @@ async def llm(query: str, model: str = os.getenv('MODEL'), stream=False, tempera
     except Exception as e:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         error_msg = f"{timestamp} - Model: {model} - Error: {str(e)}\n{traceback.format_exc()}"
-        error_logger.errors(error_msg)
+        logger.error(error_msg)
         print(error_msg)
 
 
