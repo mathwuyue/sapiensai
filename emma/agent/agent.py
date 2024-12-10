@@ -7,8 +7,9 @@ import time
 from pydantic import BaseModel, Field
 from uuid import UUID
 from typing import Optional
-from history import UserHistory
-from logger import file_error_handler as err_logger
+from db import UserHistory
+from history import get_history
+from logger import logger
 
 load_dotenv()
 model = os.getenv("MODEL")
@@ -58,8 +59,9 @@ class Agent:
                 message=message,
                 state=state,
             )
+            print('save to history')
         except Exception as e:
-            err_logger.errors(f"Failed to store history: {e}")
+            logger.error(f"Failed to store history: {e}")
             raise
         
     async def _user_llm(self, query: str, model: str, history: list, temperature: float = 0.85, stream: bool = False):
@@ -82,7 +84,7 @@ class Agent:
 class ChatAgent(Agent):
     async def act(self, query: str, state: int, agent_type: str = 'default', template=None, contex: dict = None, temperature=0.85, stream=False) -> AsyncGenerator[Dict[str, Any], None]:
         # get UserHistory
-        history = [{'role': item.role, 'content': item.content} for item in UserHistory.get_history(self.config.user_id, self.config.session_id)]
+        history = get_history(self.config.user_id, self.config.session_id)['history']
         # store user query in UserHistory
         self._store_history('user', query, state)
         # create query

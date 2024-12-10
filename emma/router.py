@@ -32,7 +32,7 @@ class UserIntentionRouter(Router):
         
     async def classify(self, query):
         # get history from redis
-        histories = get_history(self.user_id, self.session_id, self.user_meta, limit=10)
+        histories = get_history(self.user_id, self.session_id, limit=10)
         if not histories:
             histories = []
         else:

@@ -53,35 +53,46 @@ async def workflow(query: Query, config: str, websocket) -> str:
     question = query.content
     choice = await router.classify(question)
     if choice.get('message'):
+        print(6)
         agent = NullAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
-        yield agent.act(question, choice['message'])
+        async for chunk in agent.act(question, choice['message']):
+            yield chunk
     elif int(choice.get('choice')) == 1:
         pass
     elif int(choice.get('choice')) == 2:
         pass    
     elif int(choice.get('choice')) == 3:
+        print('health')
         emma_future_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         userinfo = await get_user_info(config['user_id'])
         # Extract gestational age from userinfo
         ga_weeks = int(''.join(filter(str.isdigit, userinfo.split('Gestational Age: ')[1].split(' weeks')[0])))
         if config['is_thought']:
-            yield emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=True)
+            async for chunk in emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=True):
+                yield chunk
         else:
-            response = await emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=False)
+            async for chunk in emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=False):
+                response = chunk.choices[0].message.content
             resp_json = extract_json_from_text(response)
-            yield resp_json['answer']
+            chunk.choices[0].message.content = resp_json['answer']
+            yield chunk
     elif int(choice.get('choice')) == 4:
+        print('exercise')
         emma_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         userinfo = await get_user_info(config['user_id'])
         if config['is_thought']:
-            yield emma_agent.act(question, 0, 'default', emma_fitness, stream=True)
+            async for chunk in emma_agent.act(question, 0, 'default', emma_fitness, stream=True):
+                yield chunk
         else:
-            response = await emma_agent.act(question, 0, 'default', emma_fitness, stream=False)
-            resp_json = extract_json_from_text(response)
-            yield resp_json['message']
+            async for chunk in emma_agent.act(question, 0, 'default', emma_fitness, stream=False):
+                resp_json = extract_json_from_text(chunk.choices[0].message.content)
+            chunk.choices[0].message.content = resp_json['message']
+            yield chunk
     else:
+        print('chat')
         emma_chat_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
-        yield emma_chat_agent.act(question, 0, 'default', emma_chat, stream=True)
+        async for chunk in emma_chat_agent.act(question, 0, 'default', emma_chat, stream=True):
+            yield chunk
 
 
 def build_context_resp(context, context_meta, event_id, config):

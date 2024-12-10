@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, field_validator
 from typing import List, Dict, Any, Optional, Self
 import uuid
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, DietaryData, DietarySummary
@@ -40,6 +40,7 @@ class ChatRequest(BaseModel):
     stream: bool = True
     max_tokens: int = 300
 
+
 class ChatResponse(BaseModel):
     id: str
     object: str
@@ -62,6 +63,7 @@ class UploadFileRequest(BaseModel):
 class ChatSessionRequest(BaseModel):
     user_id: str
     user_meta: Optional[dict] = None
+    is_dynamic: Optional[bool] = False 
 
 
 class ChatSessionResponse(BaseModel):

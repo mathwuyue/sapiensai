@@ -29,7 +29,7 @@ def delete_session(user_id, session_id):
     UserHistory.update(is_deleted=True).where((UserHistory.user_id == user_id) & (UserHistory.session_id == session_id)).execute()
 
 
-def get_history(user_id, session_id, user_meta, limit=40):
+def get_history(user_id, session_id, limit=40):
     '''
     Won't use user_meta in this version. Remove Redis
     '''

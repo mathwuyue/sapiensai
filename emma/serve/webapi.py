@@ -92,12 +92,18 @@ async def get_file_status(doc_id: str):
     
     
 @router.post("/v1/chat/session", response_model=ChatSessionResponse)
-async def create_chat_session(request: ChatSessionRequest):
+async def create_chat_session(request: dict):
+    print(request)
     try:
+        # Extract user_id or use a default if not provided
+        user_id = request['user_id']
         # Generate a unique session ID
-        session_id = generate_unique_session_id(request.user_id)
+        if request.get('is_dynamic', False):
+            session_id = generate_unique_session_id(user_id)
+        else:
+            session_id = '542bf4d5-ec2b-48af-8cf5-6ce527efef9f'
         return ChatSessionResponse(
-            user_id=request.user_id,
+            user_id=user_id,
             session_id=session_id
         )
     except Exception as e:

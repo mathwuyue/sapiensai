@@ -5,7 +5,7 @@ import os
 import traceback
 import httpx
 import dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any
 from llm import llm
 from prompt import get_food_nutrients_prompt, emma_glu_summary
@@ -175,8 +175,16 @@ def format_user_basic_info(data: Dict[str, Any]) -> str:
 
 
 def get_meal_data(user_id: str, date: datetime, offset: int) -> list[MealData]:
-    meals = MealData.select().where(MealData.userid == user_id)
+    start_date = date - timedelta(days=offset)
+    meals = MealData.select(MealData.type, MealData.nutrient, MealData.created_at).where(
+        (MealData.userid == user_id) &
+        (MealData.created_at.between(start_date, date))
+    )
     return meals
+
+
+def calculate_nutrition_per_day(meals: list[MealData]) -> dict:
+    
 
 
 async def get_glu_summary(user_id: str) -> list:
