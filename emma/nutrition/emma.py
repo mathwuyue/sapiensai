@@ -8,7 +8,7 @@ import dotenv
 from datetime import datetime
 from typing import Dict, Any
 from llm import llm
-from prompt import get_food_nutrients_prompt, get_glucose_summary_prompt
+from prompt import get_food_nutrients_prompt, emma_glu_summary
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, EmmaComment, DietaryData, DietarySummary, UserPreferenceData, UserBasicInfo
 from nutrition.db import UserPreference, MealData
 from fastapi import HTTPException
@@ -186,11 +186,11 @@ async def get_glu_summary(user_id: str) -> list:
             response = await client.get(
                 f"http://localhost:8000/api/v1/glucose/user/{user_id}",
                 params={"date": current_date, "offset": 7},
-                headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzUzMzQwNDYsInN1YiI6IjExODM5ODYwODkwNjI2MDQ4MCJ9.sSzLomXUyY5Lvu3Gbolp8_OtYW8lmtcsYTPBNlgcs8cc"}
+                headers={"Authorization": f"Bearer {BLOOM_KEY}"}
             )
             response.raise_for_status()
             glu_records = response.json()
-            prompt = get_glucose_summary_prompt(glu_records)
+            prompt = emma_glu_summary(glu_records)
             return await llm(prompt)
     except Exception as e:
         logger.error(f"Failed to get glucose data: {str(e)}")

@@ -88,8 +88,7 @@ class ChatAgent(Agent):
         # create query
         if agent_type == 'default':
             llm_query = template(query, **contex)
-            for chunk in self._user_llm(llm_query, self.config.model, history, temperature, stream):
-                yield chunk
+            yield self._user_llm(llm_query, self.config.model, history, temperature, stream)
 
 
 class MemoryAgent(Agent):

@@ -54,34 +54,34 @@ async def workflow(query: Query, config: str, websocket) -> str:
     choice = await router.classify(question)
     if choice.get('message'):
         agent = NullAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
-        return agent.act(question, choice['message'])
+        yield agent.act(question, choice['message'])
     elif int(choice.get('choice')) == 1:
         pass
     elif int(choice.get('choice')) == 2:
         pass    
     elif int(choice.get('choice')) == 3:
         emma_future_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
-        userinfo = get_user_info(config['user_id'])
+        userinfo = await get_user_info(config['user_id'])
         # Extract gestational age from userinfo
         ga_weeks = int(''.join(filter(str.isdigit, userinfo.split('Gestational Age: ')[1].split(' weeks')[0])))
         if config['is_thought']:
-            return emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=True)
+            yield emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=True)
         else:
-            response = emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=False)
+            response = await emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=False)
             resp_json = extract_json_from_text(response)
             yield resp_json['answer']
     elif int(choice.get('choice')) == 4:
         emma_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
-        userinfo = get_user_info(config['user_id'])
+        userinfo = await get_user_info(config['user_id'])
         if config['is_thought']:
-            return emma_agent.act(question, 0, 'default', emma_fitness, stream=True)
+            yield emma_agent.act(question, 0, 'default', emma_fitness, stream=True)
         else:
-            response = emma_agent.act(question, 0, 'default', emma_fitness, stream=False)
+            response = await emma_agent.act(question, 0, 'default', emma_fitness, stream=False)
             resp_json = extract_json_from_text(response)
             yield resp_json['message']
     else:
         emma_chat_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
-        return emma_chat_agent.act(question, 0, 'default', emma_chat, stream=True)
+        yield emma_chat_agent.act(question, 0, 'default', emma_chat, stream=True)
 
 
 def build_context_resp(context, context_meta, event_id, config):
