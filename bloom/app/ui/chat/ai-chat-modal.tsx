@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useChat } from "ai/react";
 import Image from "next/image";
 import { X, Send, Image as ImageIcon, Loader2 } from "lucide-react";
 import clsx from "clsx";
 import {
   initChatSession,
-  submitRating,
   getAuthInfo,
+  getChatHistory,
 } from "@/app/lib/actions/chat";
 
 interface AIChatModalProps {
@@ -56,6 +56,17 @@ function ThinkingIndicator() {
 
 const LLM_API_TOKEN = process.env.LLM_API_TOKEN;
 
+interface HistoryMessage {
+  id: string;
+  role: "user" | "assistant";
+  message: string | MessageContent[];
+  created_at?: string;
+}
+
+interface HistoryResponse {
+  history: HistoryMessage[];
+}
+
 export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
   const [authInfo, setAuthInfo] = useState<{
     accessToken: string;
@@ -65,38 +76,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-
-  const initSession = async () => {
-    try {
-      const data = await initChatSession();
-      setSessionId(data.session_id);
-    } catch (error) {
-      console.error("Failed to initialize chat session:", error);
-    }
-  };
-
-  useEffect(() => {
-    const fetchAuthInfo = async () => {
-      try {
-        const info = await getAuthInfo();
-        if (info.accessToken) {
-          setAuthInfo(info as { accessToken: string; userId: string });
-        }
-      } catch (error) {
-        console.error("Failed to get auth info:", error);
-      }
-    };
-
-    if (isOpen) {
-      fetchAuthInfo();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen && !sessionId && authInfo) {
-      initSession();
-    }
-  }, [isOpen, authInfo]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
     messages,
@@ -110,7 +90,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
     body: {
       user_id: authInfo?.userId,
       session_id: sessionId,
-      app_id: "wz0001",
+      app_id: "emmabloom",
       temperature: 0.1,
       stream: true,
     },
@@ -146,96 +126,105 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
       console.log("Sending request:", requestBody);
       return requestBody as unknown as JSONValue;
     },
-    onResponse: async (response: Response) => {
-      console.log("Response received:", response);
-      const reader = response.body?.getReader();
-      let currentMessageId: string | null = null;
-      let accumulatedContent = "";
-      const uniqueMessageId = `msg_${Date.now()}_${Math.random()
-        .toString(36)
-        .substr(2, 9)}`;
-
-      if (reader) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = new TextDecoder().decode(value);
-            console.log("Chunk received:", chunk);
-
-            const lines = chunk.split("\n");
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const jsonStr = line.slice(6).trim();
-                if (!jsonStr || jsonStr === "[DONE]") continue;
-
-                try {
-                  const data = JSON.parse(jsonStr);
-                  console.log("Parsed data:", data);
-
-                  // 只处理增量更新
-                  if (data.choices?.[0]?.delta?.content) {
-                    const deltaContent = data.choices[0].delta.content;
-
-                    if (!currentMessageId) {
-                      currentMessageId = uniqueMessageId;
-                      accumulatedContent = deltaContent;
-                    } else {
-                      accumulatedContent += deltaContent;
-                    }
-
-                    setMessages((currentMessages) => {
-                      const newMessage = {
-                        id: currentMessageId!,
-                        role: "assistant" as const,
-                        content: accumulatedContent,
-                        createdAt: new Date(data.created * 1000),
-                      };
-
-                      // 检查是否已经有这个消息ID的消息
-                      const existingMessageIndex = currentMessages.findIndex(
-                        (msg) => msg.id === currentMessageId
-                      );
-
-                      if (existingMessageIndex >= 0) {
-                        // 更新现有消息的内容
-                        const updatedMessages = [...currentMessages];
-                        updatedMessages[existingMessageIndex] = newMessage;
-                        return updatedMessages;
-                      } else {
-                        // 添加新消息
-                        return [...currentMessages, newMessage];
-                      }
-                    });
-                  }
-                } catch (parseError) {
-                  console.error("JSON parse error:", parseError);
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.error("Error reading response:", e);
-        } finally {
-          reader.releaseLock();
-        }
-      }
-    },
-    onFinish: (message) => {
-      console.log("Message finished:", message);
-    },
-    onError: (error) => {
-      console.error("Chat error:", error);
-    },
-    initialMessages: [
-      {
-        id: "welcome",
-        role: "assistant",
-        content: "How can I help you?",
-        createdAt: new Date(),
-      },
-    ],
+    initialMessages: [],
   });
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // 当消息列表更新时滚动到底部
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
+
+  const fetchChatHistory = async (sid: string) => {
+    try {
+      const data = await getChatHistory(sid);
+
+      // 获取历史消息数组
+      const historyArray = (data as HistoryResponse)?.history || [];
+
+      if (historyArray.length > 0) {
+        const formattedMessages = historyArray.map((msg: HistoryMessage) => {
+          let messageContent: string;
+
+          // 处理消息内容
+          if (typeof msg.message === "string") {
+            messageContent = msg.message;
+          } else if (Array.isArray(msg.message)) {
+            // 确保每个内容项都被正确处理
+            messageContent = msg.message
+              .filter(
+                (item) => item && typeof item === "object" && "type" in item
+              )
+              .map((item) => {
+                if (item.type === "text" && item.text) {
+                  return item.text;
+                }
+                return "";
+              })
+              .join("");
+          } else {
+            messageContent = "";
+          }
+
+          const formattedMessage = {
+            id: msg.id || `msg_${Date.now()}_${Math.random()}`,
+            role: msg.role,
+            content: messageContent,
+            createdAt: msg.created_at ? new Date(msg.created_at) : new Date(),
+          };
+          return formattedMessage;
+        });
+        setMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error("Failed to fetch chat history:", error);
+    }
+  };
+
+  const initSession = async () => {
+    try {
+      const data = await initChatSession();
+      const newSessionId = data.session_id;
+      setSessionId(newSessionId);
+      await fetchChatHistory(newSessionId);
+    } catch (error) {
+      console.error("Failed to initialize chat session:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (sessionId) {
+      fetchChatHistory(sessionId);
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    const fetchAuthInfo = async () => {
+      try {
+        const info = await getAuthInfo();
+        if (info.accessToken) {
+          setAuthInfo(info as { accessToken: string; userId: string });
+        }
+      } catch (error) {
+        console.error("Failed to get auth info:", error);
+      }
+    };
+
+    if (isOpen) {
+      fetchAuthInfo();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && !sessionId && authInfo) {
+      initSession();
+    }
+  }, [isOpen, authInfo]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -305,8 +294,8 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
 
       handleChatSubmit(e, { messages: [message] });
 
-      setSelectedImage(null);
-      setImageUrl(null);
+      // setSelectedImage(null);
+      // setImageUrl(null);
     },
     [sessionId, input, imageUrl, handleChatSubmit]
   );
@@ -322,20 +311,23 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
   if (!isOpen || !authInfo) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl w-full max-w-lg h-[600px] flex flex-col">
-        {/* Header */}
+    <div
+      className={clsx(
+        "fixed inset-0 bg-black/50 z-50 flex items-center justify-center",
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      )}
+    >
+      <div className="bg-white w-full max-w-2xl h-[600px] rounded-lg flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">AI Assistant</h2>
+          <h2 className="text-lg font-semibold">Chat with AI</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full"
+            className="text-gray-500 hover:text-gray-700"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Chat content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div
@@ -358,78 +350,50 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
             </div>
           ))}
           {isLoading && <ThinkingIndicator />}
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestions */}
-        {messages.length === 1 && (
-          <div className="px-4 space-y-2">
-            {suggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Selected Image Preview */}
-        {selectedImage && (
-          <div className="px-4 py-2 border-t">
-            <div className="relative w-20 h-20">
-              <Image
-                src={URL.createObjectURL(selectedImage)}
-                alt="Selected"
-                fill
-                className="object-cover rounded-lg"
+        <div className="p-4 border-t">
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <div className="flex-1 flex">
+              <input
+                type="text"
+                value={input}
+                onChange={handleInputChange}
+                placeholder="Type your message..."
+                className="flex-1 px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button
-                onClick={() => {
-                  setSelectedImage(null);
-                  setImageUrl(null);
-                }}
-                className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+              {/* <label
+                htmlFor="image-upload"
+                className="px-4 py-2 bg-gray-100 border-y border-r hover:bg-gray-200 cursor-pointer flex items-center"
               >
-                <X className="w-4 h-4" />
-              </button>
+                <ImageIcon className="w-5 h-5" />
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label> */}
             </div>
-          </div>
-        )}
-
-        {/* Input area */}
-        <form
-          onSubmit={handleSubmit}
-          className="p-4 border-t flex items-end gap-2"
-        >
-          <label className="cursor-pointer text-gray-500 hover:text-gray-700">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-            <ImageIcon className="w-6 h-6" />
-          </label>
-          <input
-            value={input}
-            onChange={handleInputChange}
-            placeholder="Type your message..."
-            className="flex-1 resize-none rounded-xl border p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <button
-            type="submit"
-            disabled={isLoading || isUploading || !sessionId}
-            className="bg-primary text-white p-2 rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading || isUploading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={clsx(
+                "px-4 py-2 bg-blue-500 text-white rounded-lg",
+                "hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                "disabled:bg-gray-300 disabled:cursor-not-allowed"
+              )}
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
