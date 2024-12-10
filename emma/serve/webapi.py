@@ -101,6 +101,9 @@ async def create_chat_session(request: ChatSessionRequest):
             session_id=session_id
         )
     except Exception as e:
+        print(f"Error: {str(e)}")
+        print("Traceback:")
+        print(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
 
   
@@ -154,9 +157,8 @@ async def chat_endpoint(websocket: WebSocket):
             text_content = [c for c in message.content if c.type == 'text']
             query = Query(role=message.role, content=text_content[0].text)
             start = time.time()
-            response = await workflow(query, config, websocket)
             is_first_chunk = True
-            async for chunk in response:
+            async for chunk in workflow(query, config, websocket):
                 if is_first_chunk:
                     is_first_chunk = False
                     end = time.time()

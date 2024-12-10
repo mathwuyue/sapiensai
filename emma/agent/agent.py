@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 from agent.memory import Memory
 from llm import llm
-from typing import Dict, Generator, Any
+from typing import Dict, AsyncGenerator, Any
 import time
 from pydantic import BaseModel, Field
 from uuid import UUID
@@ -80,7 +80,7 @@ class Agent:
 
 
 class ChatAgent(Agent):
-    def act(self, query: str, state: int, agent_type: str = 'default', template=None, contex: dict = None, temperature=0.85, stream=False) -> Generator[Any, None, None]:
+    async def act(self, query: str, state: int, agent_type: str = 'default', template=None, contex: dict = None, temperature=0.85, stream=False) -> AsyncGenerator[Dict[str, Any], None]:
         # get UserHistory
         history = [{'role': item.role, 'content': item.content} for item in UserHistory.get_history(self.config.user_id, self.config.session_id)]
         # store user query in UserHistory
