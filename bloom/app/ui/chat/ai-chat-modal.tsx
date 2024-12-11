@@ -139,7 +139,6 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = new TextDecoder().decode(value);
-            console.log("Chunk received:", chunk);
 
             const lines = chunk.split("\n");
             for (const line of lines) {
@@ -149,8 +148,6 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
 
                 try {
                   const data = JSON.parse(jsonStr);
-                  console.log("Parsed data:", data);
-
                   if (data.choices?.[0]?.delta?.content) {
                     const deltaContent = data.choices[0].delta.content;
 
