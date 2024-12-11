@@ -77,6 +77,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     messages,
@@ -126,60 +127,149 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
       console.log("Sending request:", requestBody);
       return requestBody as unknown as JSONValue;
     },
+    onResponse: async (response: Response) => {
+      console.log("Response received:", response);
+      const reader = response.body?.getReader();
+      let currentMessageId: string | null = null;
+      let accumulatedContent = "";
+
+      if (reader) {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = new TextDecoder().decode(value);
+            console.log("Chunk received:", chunk);
+
+            const lines = chunk.split("\n");
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const jsonStr = line.slice(6).trim();
+                if (!jsonStr || jsonStr === "[DONE]") continue;
+
+                try {
+                  const data = JSON.parse(jsonStr);
+                  console.log("Parsed data:", data);
+
+                  if (data.choices?.[0]?.delta?.content) {
+                    const deltaContent = data.choices[0].delta.content;
+
+                    if (!currentMessageId) {
+                      currentMessageId = `msg_${Date.now()}_${Math.random()
+                        .toString(36)
+                        .substr(2, 9)}`;
+                      accumulatedContent = deltaContent;
+                    } else {
+                      accumulatedContent += deltaContent;
+                    }
+
+                    setMessages((currentMessages) => {
+                      const newMessage = {
+                        id: currentMessageId!,
+                        role: "assistant" as const,
+                        content: accumulatedContent,
+                        createdAt: new Date(),
+                      };
+
+                      const existingMessageIndex = currentMessages.findIndex(
+                        (msg) => msg.id === currentMessageId
+                      );
+
+                      if (existingMessageIndex >= 0) {
+                        const updatedMessages = [...currentMessages];
+                        updatedMessages[existingMessageIndex] = newMessage;
+                        return updatedMessages;
+                      } else {
+                        return [...currentMessages, newMessage];
+                      }
+                    });
+                  }
+                } catch (parseError) {
+                  console.error("JSON parse error:", parseError);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error reading response:", e);
+        } finally {
+          reader.releaseLock();
+        }
+      }
+    },
+    onFinish: (message) => {
+      console.log("Message finished:", message);
+      scrollToBottomSmooth();
+    },
+    onError: (error) => {
+      console.error("Chat error:", error);
+    },
     initialMessages: [],
   });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottomInstant = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.style.scrollBehavior = "auto";
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  const scrollToBottomSmooth = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.style.scrollBehavior = "smooth";
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
   };
 
   // 当消息列表更新时滚动到底部
   useEffect(() => {
     if (messages.length > 0) {
-      scrollToBottom();
+      scrollToBottomSmooth();
     }
   }, [messages]);
+
+  // 当模态窗口打开时，立即滚动到底部
+  useEffect(() => {
+    if (isOpen && messages.length > 0) {
+      scrollToBottomInstant();
+    }
+  }, [isOpen, messages.length]);
 
   const fetchChatHistory = async (sid: string) => {
     try {
       const data = await getChatHistory(sid);
-
-      // 获取历史消息数组
       const historyArray = (data as HistoryResponse)?.history || [];
 
       if (historyArray.length > 0) {
         const formattedMessages = historyArray.map((msg: HistoryMessage) => {
           let messageContent: string;
 
-          // 处理消息内容
           if (typeof msg.message === "string") {
             messageContent = msg.message;
           } else if (Array.isArray(msg.message)) {
-            // 确保每个内容项都被正确处理
             messageContent = msg.message
-              .filter(
-                (item) => item && typeof item === "object" && "type" in item
-              )
-              .map((item) => {
-                if (item.type === "text" && item.text) {
-                  return item.text;
-                }
-                return "";
-              })
+              .map((item) => (item.type === "text" ? item.text || "" : ""))
               .join("");
           } else {
             messageContent = "";
           }
 
-          const formattedMessage = {
+          return {
             id: msg.id || `msg_${Date.now()}_${Math.random()}`,
             role: msg.role,
             content: messageContent,
             createdAt: msg.created_at ? new Date(msg.created_at) : new Date(),
           };
-          return formattedMessage;
         });
+
         setMessages(formattedMessages);
+
+        // 确保消息渲染后再滚动
+        setTimeout(() => {
+          scrollToBottomSmooth();
+        }, 100);
       }
     } catch (error) {
       console.error("Failed to fetch chat history:", error);
@@ -328,7 +418,11 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto p-4 space-y-4"
+          style={{ scrollPaddingBottom: "100px" }}
+        >
           {messages.map((message) => (
             <div
               key={message.id}
