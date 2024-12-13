@@ -119,3 +119,29 @@ export async function getAuthInfo() {
     userId: session.user.id
   };
 }
+
+export async function getChatHistory(sessionId: string) {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const queryParams = new URLSearchParams({
+    user_id: session.user.id,
+    session_id: sessionId,
+  });
+
+  const response = await fetch(`${BASE_URL}/v1/chat/history?${queryParams}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${LLM_API_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch chat history");
+  }
+
+  return response.json();
+}

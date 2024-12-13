@@ -93,7 +93,6 @@ export async function fetchGlucoseReadings(): Promise<Glucose[]> {
 
     }
     const data = await response.json();
-    console.log("data--------------------", data);
     return data;
 
   } catch (error) {
