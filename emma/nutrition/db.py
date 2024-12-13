@@ -53,6 +53,8 @@ class ExerciseData(BaseModel):
     exercise = CharField(max_length=255, index=True)
     duration = FloatField()
     calories = FloatField()
+    intensity = CharField(max_length=16, index=True)
+    bpm = FloatField(null=True)
     remark = CharField(max_length=255, null=True)
     start_time = DateTimeField(null=True)
     emma = BinaryJSONField(null=True)

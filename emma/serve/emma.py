@@ -13,8 +13,8 @@ from storage.huawei import get_file as hw_get_file
 from storage.local import get_file as local_get_file
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral
 from prompt import get_food_nutrients_prompt
-from nutrition.db import ExerciseData
-from nutrition.emma import dietary_recommendation
+from nutrition.db import ExerciseData, ExerciseDatabase
+from nutrition.emma import dietary_recommendation, get_exercise_summary
 
 
 dotenv.load_dotenv()
@@ -25,21 +25,60 @@ class UserInfoRequest(BaseModel):
     user_id: str
 
 
-@router.post("/v1/emma/dietary")
-def get_dietary_recommendation(request: UserInfoRequest) -> DietaryResponse:
+# @router.post("/v1/emma/dietary")
+# async def get_dietary_recommendation(request: UserInfoRequest) -> DietaryResponse:
+#     try:
+#         result = await dietary_recommendation(basicinfo={}, glu=[], meals=[], orig_plan="")
+#         return DietaryResponse(
+#             status=200,
+#             resp={
+#                 "message": "Successfully generated dietary recommendations",
+#                 "data": result
+#             }
+#         )
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Failed to generate dietary recommendations: {str(e)}"
+#         )
+
+  
+class ExerciseDataRequest(BaseModel):
+    user_id: str
+    exercise: str
+    duration: float
+    weight: Optional[float] = 55
+    intensity: Optional[str] = 'normal'
+    bpm: Optional[float] = 0.0
+    remark: Optional[str] = None
+    start_time: Optional[datetime] = None
+
+
+@router.post("/v1/emma/exercise")
+async def save_exercise_data(request: ExerciseDataRequest):
+    # get emma comment
+    emma_comment, calories = await get_exercise_summary(request.user_id, request.exercise, request.intensity, request.duration, request.bpm, request.start_time, request.remark)
     try:
-        result = await dietary_recommendation(basicinfo={}, glu=[], meals=[], orig_plan="")
-        return DietaryResponse(
-            status=200,
-            resp={
-                "message": "Successfully generated dietary recommendations",
-                "data": result
-            }
+        exercise = ExerciseData.create(
+            user_id=request.user_id,
+            exercise=request.exercise,
+            duration=request.duration,
+            intensity=request.intensity,
+            bpm=request.bpm,
+            remark=request.remark,
+            start_time=request.start_time,
+            calories=calories,  # Default value, could be calculated based on exercise type
+            updated_at=datetime.now()
         )
+        return {
+            "status": 200,
+            "summary": emma_comment.summary,
+            "advice": emma_comment.advice,
+        }
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to generate dietary recommendations: {str(e)}"
+            detail=f"Failed to save exercise data: {str(e)}"
         )
 
 

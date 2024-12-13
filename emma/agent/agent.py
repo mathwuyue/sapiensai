@@ -70,8 +70,10 @@ class Agent:
         """
         if stream:
             agent_resp = ''
-            async for chunk in llm(query, model=self.config.model, history=history, temperature=temperature, stream=stream):
-                agent_resp += chunk.choices[0].message.content
+            response = await llm(query, model=self.config.model, history=history, temperature=temperature, stream=stream)
+            async for chunk in response:
+                if chunk.choices[0].delta.content:
+                    agent_resp += chunk.choices[0].delta.content
                 yield chunk
         else:
             llm_resp = await llm(query, model=self.config.model, history=history, temperature=temperature, stream=stream)
@@ -82,15 +84,19 @@ class Agent:
 
 
 class ChatAgent(Agent):
-    async def act(self, query: str, state: int, agent_type: str = 'default', template=None, contex: dict = None, temperature=0.85, stream=False) -> AsyncGenerator[Dict[str, Any], None]:
+    async def act(self, query: str, state: int, agent_type: str = 'default', template=None, context: dict = None, temperature=0.85, stream=False) -> AsyncGenerator[Dict[str, Any], None]:
         # get UserHistory
         history = get_history(self.config.user_id, self.config.session_id)['history']
         # store user query in UserHistory
         self._store_history('user', query, state)
         # create query
         if agent_type == 'default':
-            llm_query = template(query, **contex)
-            yield self._user_llm(llm_query, self.config.model, history, temperature, stream)
+            if context:
+                llm_query = template(query, **context)
+            else:
+                llm_query = template(query)
+            async for chunk in self._user_llm(llm_query, self.config.model, history, temperature, stream):
+                yield chunk
 
 
 class MemoryAgent(Agent):

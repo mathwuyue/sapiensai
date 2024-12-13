@@ -442,6 +442,50 @@ def emma_glu_summary(glucose_records):
     {{ glucose_records }}
     ```
     '''
+    
+    
+@prompt
+def emma_exercise_summary(exercise, exercise_records, weight, ga, conditions, complications, exercise_bpm):
+    '''
+    User is a pregnant woman in {{ga}} weeks. \n
+    User has conditions and complications: {{conditions}}, {{complications}}. \n
+    Here is the user's new exercise record: \n
+    ```json
+    Exercise: {{ exercise['exercise'] }}, intensity: {{ exercise['intensity'] }}, duration: {{ exercise['duration'] }}, calories: {{ exercise['calories'] }}
+    ```
+    Here is the user's comment of her exercise: ```{{ exercise['remark'] }}``` \n
+    The heart rate after user's exercise: {{ exercise['bpm'] }}. If it is 0.0, user did not provide the information.
+    If the given calories is 0, search for the Metabolic Equivalent of the {{ exercise }} with the {{ intensity }} and calculate the calories as: \n
+    ```python
+    calories = MET * weight * 1.05 * duration / 60
+    ```
+    Given the user's a week's exercise records in json format ```{"total": int, "data": [{"datetime": date, "exercise": str, "intensity": int, "duration": int, "calories": float}]}```, intensity in the json data represents the intensity of the exercise, gentle, low, normal and high. \n
+    Here is the user's exercise records: \n
+    ```json
+    {{ exercise }}
+    ```
+ 
+    Summarize the user's exercise records from four aspects: \n
+    1. For the new record, What is the level of user's exercise, too low, low, normal, high or extream high. \n
+    2. For the record histories, Whether the user's exercise is stable. \n
+    3. For the record histories, Whether the user's exercise is well-controlled. \n
+    4. What are the potential risks of the user's exercise. For example, exercise is too high in the morning. \n
+    
+    You should follow the guidelines: \n
+    1. If user's conditions and complications are high-risk, you should ask the user not to exercise unless get direct instruction from professional doctors. \n
+    2. Exercise during pregnancy should focus on moderate-intensity aerobic activities. That is, if user provided [heart rate], it should be between {{exercise_bpm['min]}} and {{exercise_bpm['max']}}. If it is too low, the user should increase the intensity. If it is too high, user should decrease the intensity or duration and ask for the advice from professional. You should mention this in your summary. This is very important to the user. \n
+    3. At least 90 minutes of moderate-intensity aerobic activity per week is recommended. \n
+    4. It is recommended to exercise 30 minutes after each meal, with a duration of 30 minutes per session. \n
+    
+    You should check the user's records whether they meet the guidelines. When checking a guideline, think step by step. \n
+    You should provide the summary in a concise language no more than 100 words. \n
+    If user's exercise violates the guidelines, you should provide the advice within 100 words for the user to adjust exercise plan. If not, advice user to keep the good work. The advice should always be cherish and encourage user to keep exercise regulary. \n
+    The summary and advice should in the language as the dialogue and in Json format
+    
+    ```json
+    {"summary": "string", "advice": "string", "calories": [calories]}
+    ```
+    '''
 
 
 if __name__ == '__main__':

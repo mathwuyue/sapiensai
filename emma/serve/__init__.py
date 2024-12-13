@@ -1,1 +1,1 @@
-__all__ = ['webapi', 'product', 'userinfo']
+__all__ = ['webapi', 'product', 'userinfo', 'emma']
