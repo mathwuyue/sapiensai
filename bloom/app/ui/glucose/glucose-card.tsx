@@ -96,7 +96,6 @@ export default function GlucoseCard() {
 
 
         const sortedData = formattedData.sort((a, b) => {
-          // 首先按日期排序
           const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
           if (dateCompare === 0) {
             return a.type - b.type;
@@ -151,7 +150,7 @@ export default function GlucoseCard() {
               //tickFormatter={(value) => value.toLocaleDateString()}
             />
             <YAxis
-              domain={[0, 'auto']}  // 设置最小值为 0，最大值自动计算
+              domain={[0, 'auto']}  
               tickLine={false}
               axisLine={false}
               tickMargin={8}
