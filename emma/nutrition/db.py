@@ -31,6 +31,7 @@ class MealData(BaseModel):
     userid = CharField(max_length=255)
     type = IntegerField()
     url = BinaryJSONField()
+    food = BinaryJSONField()
     nutrient = BinaryJSONField()
     emma = BinaryJSONField(null=True)
     created_at = DateTimeField(default=datetime.datetime.now)

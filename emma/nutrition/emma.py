@@ -176,15 +176,20 @@ def format_user_basic_info(data: Dict[str, Any]) -> str:
 
 def get_meal_data(user_id: str, date: datetime, offset: int) -> list[MealData]:
     start_date = date - timedelta(days=offset)
-    meals = MealData.select(MealData.type, MealData.nutrient, MealData.created_at).where(
+    meals = MealData.select(MealData.type, MealData.food, MealData.nutrient, MealData.created_at).where(
         (MealData.userid == user_id) &
         (MealData.created_at.between(start_date, date))
     )
     return meals
 
 
-async def calculate_nutrition_per_day(meals: list[MealData]) -> dict:
-    pass
+def calculate_nutrition_per_day(user_id: str, date: datetime) -> dict:
+    '''
+    Get 7 days meal record to calculate the nutrition from food per day
+    '''
+    # get meal data
+    meals = get_meal_data(user_id, date, 7)
+    # group them by date
 
 
 def cal_calories_met(weight: float, duration: float, met: float) -> float:
