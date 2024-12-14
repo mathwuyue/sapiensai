@@ -30,7 +30,7 @@ LLM_PROVIDER = {
 }
 
 
-async def llm(query: str, model: str = os.getenv('MODEL'), stream=False, temperature=0.85, top_p=0.8, history=[], json_format=None) -> str:
+async def llm(query: str, model: str = os.getenv('MODEL'), stream=False, temperature=0.85, top_p=0.8, history=[], json_format=None, is_text=False) -> str:
     messages = history + [{"role": "user", "content": query}]
     llm_provider = LLM_PROVIDER.get(model, None)
     try:
@@ -63,10 +63,10 @@ async def llm(query: str, model: str = os.getenv('MODEL'), stream=False, tempera
                 response_format=json_format
             )
         print('llm time:', time.time() - start)
-        if stream:
+        if not is_text:
             return response
-        else:
-            return response.choices[0].message.content
+        assert stream is False
+        return response.choices[0].message.content
     except Exception as e:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         error_msg = f"{timestamp} - Model: {model} - Error: {str(e)}\n{traceback.format_exc()}"

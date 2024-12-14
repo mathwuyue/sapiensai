@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, Field, BeforeValidator
+from typing import List, Dict, Any, Optional, Annotated
 import uuid
 
+
+UserId = Annotated[int, BeforeValidator(lambda v: str(v))]
 
 class NutritionMacro(BaseModel):
     calories: float
@@ -41,7 +43,7 @@ class EmmaComment(BaseModel):
 
 
 class UserBasicInfo(BaseModel):
-    user_id: str
+    user_id: UserId
     age: int
     pre_weight: float
     cur_weight: float
@@ -54,10 +56,10 @@ class UserBasicInfo(BaseModel):
     ga: int
     condition: str
     cond_level: int
-    complication: str
+    complications: str
     execise: int
-    scripts: str = Field(default='', description="Prescribed scripts")
-    advice: str = Field(default='', description="Doctor's advice for dietary")
+    scripts: Optional[str] = Field(default=None, description="Prescribed scripts")
+    advice: Optional[str] = Field(default=None, description="Doctor's advice for dietary")
   
     
 class UserPreferenceData(BaseModel):

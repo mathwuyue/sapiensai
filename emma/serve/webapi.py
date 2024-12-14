@@ -169,6 +169,7 @@ async def chat_endpoint(websocket: WebSocket):
                     is_first_chunk = False
                     end = time.time()
                     # logger.info(f"完成生成第一个chunk，开始传输数据。耗时{end - start:.2f}秒")
+                print(chunk)
                 resp_chunk = chunk_to_dict(chunk)
                 resp_chunk['user_id'] = chat_request.user_id
                 resp_chunk['session_id'] = str(chat_request.session_id)

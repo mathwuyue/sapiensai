@@ -50,22 +50,6 @@ async def analyze_food(image_base64: str) -> list[NutritionMacro, NutritionMicro
         logger.error(f"Error analyzing food image: {error_traceback}")
         raise e
         
-        
-# async def meal_comment(meal: str) -> EmmaComment:
-#     prompt = [
-#         {
-#             "type": "text",
-#             "text": f"Comment on the following meal: {meal}"
-#         }
-#     ]
-#     try:
-#         return await llm(prompt, model='qwen-vl-max', temperature=0.1)
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Failed to generate meal comment: {str(e)}"
-#         )
-        
 
 async def dietary_recommendation(basicinfo: dict, glu: list, meals: list, orig_plan: str) -> list[DietarySummary, list[DietaryData]]:
     prompt = [
@@ -190,6 +174,59 @@ def calculate_nutrition_per_day(user_id: str, date: datetime) -> dict:
     # get meal data
     meals = get_meal_data(user_id, date, 7)
     # group them by date
+    # Group meals by day
+    daily_totals = {}
+    
+    for meal in meals:
+        # Truncate datetime to day
+        day = meal.created_at.date()
+        
+        if day not in daily_totals:
+            daily_totals[day] = {
+                'macro': NutritionMacro(calories=0, protein=0, fat=0, carb=0),
+                'micro': NutritionMicro(fa=0, vc=0, vd=0),
+                'mineral': NutritionMineral(calcium=0, iron=0, zinc=0, iodine=0)
+            }
+        # Add nutrients from current meal
+        nutrients = meal.nutrient
+        macro = nutrients['macro']
+        micro = nutrients['micro']
+        mineral = nutrients['mineral']
+        # Sum macro nutrients
+        daily_totals[day]['macro'].calories += macro.get('calories', 0)
+        daily_totals[day]['macro'].protein += macro.get('protein', 0)
+        daily_totals[day]['macro'].fat += macro.get('fat', 0)
+        daily_totals[day]['macro'].carb += macro.get('carb', 0)
+        # Sum micro nutrients
+        daily_totals[day]['micro'].fa += micro.get('fa', 0)
+        daily_totals[day]['micro'].vc += micro.get('vc', 0)
+        daily_totals[day]['micro'].vd += micro.get('vd', 0)
+        # Sum minerals
+        daily_totals[day]['mineral'].calcium += mineral.get('calcium', 0)
+        daily_totals[day]['mineral'].iron += mineral.get('iron', 0)
+        daily_totals[day]['mineral'].zinc += mineral.get('zinc', 0)
+        daily_totals[day]['mineral'].iodine += mineral.get('iodine', 0)
+    # Format output string
+    output = []
+    for day, nutrients in sorted(daily_totals.items()):
+        macro = nutrients['macro']
+        micro = nutrients['micro']
+        mineral = nutrients['mineral']
+        # final string
+        day_str = f"Day {day.strftime('%m-%d')}: "
+        day_str += f"Calories {macro.calories:.1f}g, "
+        day_str += f"Protein {macro.protein:.1f}g, "
+        day_str += f"Fat {macro.fat:.1f}g, "
+        day_str += f"Carb {macro.carb:.1f}g, "
+        day_str += f"Folic Acid {micro.fa:.1f}mcg, "
+        day_str += f"VitC {micro.vc:.1f}mg, "
+        day_str += f"VitD {micro.vd:.1f}mcg, "
+        day_str += f"Calcium {mineral.calcium:.1f}mg, "
+        day_str += f"Iron {mineral.iron:.1f}mg, "
+        day_str += f"Zinc {mineral.zinc:.1f}mg, "
+        day_str += f"Iodine {mineral.iodine:.1f}mcg"
+        output.append(day_str)
+    return "".join(output)
 
 
 def cal_calories_met(weight: float, duration: float, met: float) -> float:
@@ -224,10 +261,14 @@ async def get_exercise_summary(user_id: str, exercise: str, intensity: str, dura
     else:
         met = exercise_data.calories
     # get user info
-    user_data = await httpx.AsyncClient().get(
+    user_data_response = await httpx.AsyncClient().get(
         f"http://localhost:8000/api/v1/profile/user/{user_id}", 
         headers={"Authorization": f"Bearer {BLOOM_KEY}"}
     )
+    user_data_response.raise_for_status()
+    # user_data = user_data_response.json()
+    user_data = UserBasicInfo(**user_data_response.json())
+    # print(user_data)
     # Calculate calories based on duration and base calories from database
     calories = cal_calories_met(float(user_data.cur_weight), float(duration), float(met))
     conditions = f"{user_data.condition} (Level {user_data.cond_level})"

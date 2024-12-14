@@ -33,7 +33,7 @@ class ChatRequest(BaseModel):
     user_id: str
     session_id: uuid.UUID
     app_id: Optional[str] = 'default'
-    is_thought: bool = True
+    is_thought: bool = False
     user_meta: Dict[str, Any]
     messages: List[Message]
     temperature: float = 0.1

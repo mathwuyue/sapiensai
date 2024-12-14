@@ -39,7 +39,7 @@ class UserIntentionRouter(Router):
             histories = histories['history']
         prompt = router_prompt(self.options, query, self.description)
         # connect to llm and get the choice
-        choice = await llm(prompt, history=histories)
+        choice = await llm(prompt, history=histories, is_text=True)
         choice = extract_json_from_text(choice)
         return choice
     

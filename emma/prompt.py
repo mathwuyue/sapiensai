@@ -1,3 +1,8 @@
+'''
+All prompts are given here. Some are in Chinese
+Author: Yue Wu <wuyue681@gmail.com>
+'''
+
 from functools import wraps
 from jinja2 import Template
 import inspect
@@ -222,7 +227,7 @@ def emma_future(query, context):
     Observation2: 在怀孕期间，如果需要替代阿司匹林的药物，选择取决于具体的医疗需求。例如，如果您需要的是解热镇痛药，或者是为了抗血小板聚集预防心血管疾病，不同的情况下推荐的替代药物会有所不同。对于解热镇痛的需求，对乙酰氨基酚（扑热息痛）通常是怀孕妇女较为安全的选择。它被广泛认为是在妊娠期间可以使用的解热镇痛药之一，用于缓解轻度到中度的疼痛和发热。然而，即便是相对安全的药物，也应在医生的指导下使用，并且遵循推荐剂量。对于抗血小板治疗的需求，如为了预防先兆子痫或其他心血管问题，在某些情况下，您的医生可能会考虑其他抗凝药物或抗血小板药物，如低分子肝素或硫酸氢氯吡格雷。但是，这些药物的应用必须严格遵循医生的指导，因为它们也有特定的风险和适应症。重要的是，在怀孕期间不应自行决定使用任何药物作为阿司匹林的替代品。所有用药决定都应由您与产科医生共同讨论后作出，以确保所选药物既有效又安全，不会对您或胎儿造成不良影响。每个孕妇的情况都是独特的，因此个性化的医疗建议至关重要。 \n
     Evaluation2: 9
     Thought3: Obervation1 and Observation2 are high confident level, I will combine them to generate the final answer.
-    Action3: Summarize. In Json format. {"query": "我是否可以用阿司匹林", "answer": "怀孕21周是否能服用阿司匹林，因人而异，请咨询专业医师。较低剂量的阿司匹林（每日约 60 至 100 毫克（mg），典型的非处方低剂量阿司匹林为81mg），对孕妇和婴儿没有影响，在整个妊娠期均可安全使用。但美国食品药品管理局（FDA）不建议孕妇在孕期第 19 周之后使用非甾体类抗炎药（NSAID）。阿司匹林就是一种 NSAID。使用 NSAID 可导致胎儿出现罕见但严重的肾脏问题，还可能造成羊水少，继而导致胎儿出现更多问题。通常不建议孕期使用较高剂量的阿司匹林。在孕晚期使用高剂量阿司匹林还会增加胎儿心脏血管过早闭合的风险。如果您必须在孕晚期使用阿司匹林，您可能需要频繁约诊检查胎儿健康。在任何妊娠阶段长期使用高剂量阿司匹林都会增加早产儿脑出血的风险。因此，如果在孕前您按照医嘱服用低剂量阿司匹林，在21周时请不要在没有医嘱的情况下停用。如果目前没有任何医嘱，请不要使用阿司匹林。您在妊娠期间需要使用止痛药，请咨询医务人员。除阿司匹林以外的其他止痛药，例如对乙酰氨基酚。如果您目前正在使用高剂量阿司匹林，请与专业医疗人士保持沟通，增加孕检次数"}
+    Action3: Summarize. In Json format. ```json {"query": "我是否可以用阿司匹林", "message": "怀孕21周是否能服用阿司匹林，因人而异，请咨询专业医师。较低剂量的阿司匹林（每日约 60 至 100 毫克（mg），典型的非处方低剂量阿司匹林为81mg），对孕妇和婴儿没有影响，在整个妊娠期均可安全使用。但美国食品药品管理局（FDA）不建议孕妇在孕期第 19 周之后使用非甾体类抗炎药（NSAID）。阿司匹林就是一种 NSAID。使用 NSAID 可导致胎儿出现罕见但严重的肾脏问题，还可能造成羊水少，继而导致胎儿出现更多问题。通常不建议孕期使用较高剂量的阿司匹林。在孕晚期使用高剂量阿司匹林还会增加胎儿心脏血管过早闭合的风险。如果您必须在孕晚期使用阿司匹林，您可能需要频繁约诊检查胎儿健康。在任何妊娠阶段长期使用高剂量阿司匹林都会增加早产儿脑出血的风险。因此，如果在孕前您按照医嘱服用低剂量阿司匹林，在21周时请不要在没有医嘱的情况下停用。如果目前没有任何医嘱，请不要使用阿司匹林。您在妊娠期间需要使用止痛药，请咨询医务人员。除阿司匹林以外的其他止痛药，例如对乙酰氨基酚。如果您目前正在使用高剂量阿司匹林，请与专业医疗人士保持沟通，增加孕检次数"}```
     </example>
     
     <example>
@@ -236,13 +241,13 @@ def emma_future(query, context):
     Observation2: 妊娠期糖尿病应该注意糖分摄入，多吃粗粮，多补充维生素C等。[我是营养运动方面的专业AI助手，我可以为您提供这方面的建议，您可以和我多交流，我会尽力帮助您哦！].
     Evaluation2: 9
     Thought3: Obervation1 and Observation2 are high confident level, I will combine them to generate the final answer.
-    Action: In Json format, the output should use the language as query: {"query": "我是否可以用阿司匹林", "answer": "妊娠期糖尿病（Gestational Diabetes Mellitus, GDM）是一种在怀孕期间首次发现的糖代谢异常问题。虽然它可能听起来令人担忧，但通过正确的管理，大多数孕妇都能顺利度过孕期并生下健康的宝宝。而我是一个AI营养助手，妊娠期糖尿病需要血糖监测、营养建议，这正是我擅长的领域。在以后的日子你，我可以为您提供营养建议，帮助您管理妊娠期糖尿病。请相信我的能力，我们一起努力哦！"}
+    Action: In Json format, the output should use the language as query: ```json {"query": "我是否可以用阿司匹林", "message": "妊娠期糖尿病（Gestational Diabetes Mellitus, GDM）是一种在怀孕期间首次发现的糖代谢异常问题。虽然它可能听起来令人担忧，但通过正确的管理，大多数孕妇都能顺利度过孕期并生下健康的宝宝。而我是一个AI营养助手，妊娠期糖尿病需要血糖监测、营养建议，这正是我擅长的领域。在以后的日子你，我可以为您提供营养建议，帮助您管理妊娠期糖尿病。请相信我的能力，我们一起努力哦！"}```
     </example>
     
     <example>
     Query: 我是0周孕妇, 我羊水少怎么办
     Thought1: 羊水问题需要分孕中期与孕晚期讨论，用户没有提供具体孕周，需要确认。
-    Action1: Ask[用户怀孕周数]. In Json format. {"query": "我是0周孕妇, 我羊水少怎么办", "answer": "我暂时无法回答您的问题，因为您没有提供具体的孕周信息。羊水少的处理方法取决于孕周和具体情况，请问您怀孕几周了？"}
+    Action1: Ask[用户怀孕周数]. In Json format. ```json {"query": "我是0周孕妇, 我羊水少怎么办", "message": "我暂时无法回答您的问题，因为您没有提供具体的孕周信息。羊水少的处理方法取决于孕周和具体情况，请问您怀孕几周了？"}```
     </example>
     
     <example>
@@ -251,7 +256,7 @@ def emma_future(query, context):
     Action1: Review[Dialogue].
     Observation1: 用户提到了过敏，但没有提供具体的过敏症状。
     Thought2: 用户提到了过敏，但没有提供具体的过敏症状，需要询问。
-    Action2: Ask[用户过敏症状]. In Json format. {"query": "我是12周孕妇, 我有点过敏怎么办？", "answer": "我能问问您有哪些过敏症状吗？"}
+    Action2: Ask[用户过敏症状]. In Json format. ```json {"query": "我是12周孕妇, 我有点过敏怎么办？", "message": "我能问问您有哪些过敏症状吗？"}```
     </example>
     
     Here is the actual query you should solve: `我是{{context}}周孕妇, {{query}}`.
@@ -317,12 +322,15 @@ def emma_fitness(query, userinfo):
     Think step by step. 
     Evaluate your solution at the end of the process. Make sure you follow all the instructions.
     If you are not sure about the answer, say you do not know the answer and ask the user to refer to professionals. This is very important to the user.
-    Give the final answer in the language as the dialogue and in the json format: { "message": "string" }
+    Give the final answer in the language as the dialogue and in the json format: \n
+    ```json
+    { "message": "string" }
+    ```
     '''
     
     
 @prompt
-def emma_nutrition(query, userinfo, food_preference, glu_summary, products):
+def emma_nutrition(query, userinfo, food_preference, glu_summary, meal, products):
     '''
     You are an expert in nutritient and food. You will provide nutrition and food advice to preganent woman according to the dialogue in multi-rounds conversation. \n
     The final output should in Json format: {"message": str}
@@ -332,9 +340,9 @@ def emma_nutrition(query, userinfo, food_preference, glu_summary, products):
     2. Check user's food preference given in <food_preference></food_preference> XML tags. \n
     3. Check user's glucose summary given in <glu_summary></glu_summary> XML tags. \n
     4. Check user's meal summary given in <meal></meal> XML tags. \n
-    4. If provided user's information is not enough, you should ask the user to provide more information. You should be specific, for example, if condition is missing, ask user to input her conditions. DO NOT use general words like "Provide related information".\n
-    6. You should always check the user's conditions and complications before giving advice. This is very important to the users\n
-    7. You should provide food and nutrition advice based on the user's background information, food preferences, glucose summary.\n
+    5. You should always check the user's conditions and complications before giving advice. This is very important to the users\n
+    6. If provided user's information is not enough, you should ask the user to provide more information. You should be specific, for example, if condition is missing, ask user to input her conditions. DO NOT use general words like "Provide related information".\n
+    7. You should try your best to provide food and nutrition advice based on the food preferences. \n
     8. Pick a product from the products list and recommend it to the user. \n
     9. Your final round reply should use the framework: [fact][summary of user situation][recommendation][pick proper product to recommend user to purchase][remind user to keep good habits]
     5. If user ask about food, . Think step by step as following example in <example></example> XML tags. \n
@@ -394,7 +402,10 @@ def emma_nutrition(query, userinfo, food_preference, glu_summary, products):
     Think step by step. 
     Evaluate your solution at the end of the process. Make sure you follow all the instructions.
     If you are not sure about the answer, say you do not know the answer and ask the user to refer to professionals. This is very important to the user.
-    Give the final answer in the language as the dialogue and in the json format: { "message": "string" }
+    Give the final answer in the language as the dialogue and in the json format: \n
+    ```json
+    { "message": "string" }
+    ```
     '''
     
 
@@ -445,7 +456,7 @@ def emma_exercise_summary(exercise, exercise_records, weight, ga, conditions, co
     
     You should follow the guidelines: \n
     1. If user's conditions and complications are high-risk, you should ask the user not to exercise unless get direct instruction from professional doctors. \n
-    2. Exercise during pregnancy should focus on moderate-intensity aerobic activities. That is, if user provided [heart rate], it should be between {{exercise_bpm['min]}} and {{exercise_bpm['max']}}. If it is too low, the user should increase the intensity. If it is too high, user should decrease the intensity or duration and ask for the advice from professional. You should mention this in your summary. This is very important to the user. \n
+    2. Exercise during pregnancy should focus on moderate-intensity aerobic activities. That is, if user provided [heart rate], it should be between {{exercise_bpm['min']}} and {{exercise_bpm['max']}}. If it is too low, the user should increase the intensity. If it is too high, user should decrease the intensity or duration and ask for the advice from professional. You should mention this in your summary. This is very important to the user. \n
     3. At least 90 minutes of moderate-intensity aerobic activity per week is recommended. \n
     4. It is recommended to exercise 30 minutes after each meal, with a duration of 30 minutes per session. \n
     
