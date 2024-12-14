@@ -108,3 +108,33 @@ export const EXERCISE_LEVELS = [
   { value: 3, label: "Regular Exercise" },
   { value: 4, label: "Heavy Exercise" },
 ] as const;
+
+export type ExerciseType = "walking" | "running" | "cycling" | "swimming" | "jumping rope" | "aerobics" | "other" ;
+export type ExerciseIntensity = "gentle" | "low" | "normal" | "high";
+
+export interface Exercise {
+  user_id: string;
+  exercise: ExerciseType;
+  intensity: ExerciseIntensity;
+  duration: number;
+  bpm?: number;
+  start_time: string;
+  remark?: string;
+}
+
+export const EXERCISE_TYPES = [
+  "walking",
+  "running",
+  "cycling",
+  "swimming",
+  "jumping rope",
+  "aerobics",
+  "other"
+] as const;
+
+export const INTENSITY_TYPES = [
+  'gentle',
+  'low',
+  'normal',
+  'high'
+] as const;
