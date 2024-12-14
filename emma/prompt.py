@@ -189,8 +189,19 @@ def qa_prompt(query, context):
  
 @prompt
 def get_food_nutrients_prompt(food_img, meal_type, query='请分析这张食物图片并提供营养信息。'):
-    '''Query: {{ query }}. Follow the steps below to analyze the food image and provide the nutrition information. \n
-    1. 
+    '''Query: {{ query }}.  meal_type: {{ meal_type }} \n
+    Tools: \n
+    1. USDA FoodData: You search USDA National Nutrient Database for Standard Reference, and find calories, protein, fat, carb, folic acid, vitamine c, vitamine d, calcium, iron, zinc and iodine information of a food. \n
+    2. GI and GL: You can search the database and get the glycemic index (GI) and glycemic load (GL) of a food. \n
+    
+    Workflows: \n
+    Follow the steps below to analyze the food image and provide the nutrition information. \n
+    1. Identify different food items in the image and count the number of items. \n
+    2. For each item, use USDA FoodData to find calories, protein, fat, carb, folic acid, vitamine c, vitamine d, calcium, iron, zinc and iodine information. \n
+    3. Count the total nutrition information calories, protein, fat, carb, folic acid, vitamine c, vitamine d, calcium, iron, zinc and iodine: sum(food item nutrition * number of food item). \n
+    4. Make summary of food pictures from following aspects:
+        1. Check GI and GL of the food. Point out any high GI and GL food. \n
+        2. Check the meal type
                 Return only a JSON with this exact structure:
                 {
                 "items": [{

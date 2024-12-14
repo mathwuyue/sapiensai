@@ -66,6 +66,7 @@ async def workflow(query: Query, config: str, websocket) -> str:
         emma_future_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         userinfo = await get_user_info(config['user_id'])
         # Extract gestational age from userinfo
+        print(userinfo)
         ga_weeks = int(''.join(filter(str.isdigit, userinfo.split('Gestational Age: ')[1].split(' weeks')[0])))
         if config['is_thought']:
             async for chunk in emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=True):
@@ -74,7 +75,7 @@ async def workflow(query: Query, config: str, websocket) -> str:
             async for chunk in emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=False):
                 response = chunk.choices[0].message.content
             resp_json = extract_json_from_text(response)
-            chunk.choices[0].message.content = resp_json['answer']
+            chunk.choices[0].message.content = resp_json['message']
             yield chunk
     elif int(choice.get('choice')) == 4:
         print('exercise')

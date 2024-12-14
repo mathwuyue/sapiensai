@@ -146,7 +146,7 @@ def format_user_basic_info(data: Dict[str, Any]) -> str:
         f"Blood Pressure: {info.bph}/{info.bpl}",
         f"Gestational Age: {info.ga} weeks",
         f"Condition: {info.condition} (Level {info.cond_level})",
-        f"Complications: {info.complication}",
+        f"Complications: {info.complications}",
         f"Exercise Level: {info.execise}"
     ]
     if info.scripts:
