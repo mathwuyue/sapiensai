@@ -38,7 +38,7 @@ class DietaryData(BaseModel):
     
     
 class EmmaComment(BaseModel):
-    comment: str
+    summary: str
     advice: str = ''
 
 

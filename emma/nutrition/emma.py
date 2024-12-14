@@ -270,6 +270,8 @@ async def get_exercise_summary(user_id: str, exercise: str, intensity: str, dura
     user_data = UserBasicInfo(**user_data_response.json())
     # print(user_data)
     # Calculate calories based on duration and base calories from database
+    print("met: ", met)
+    print("weight: ", user_data.cur_weight)
     calories = cal_calories_met(float(user_data.cur_weight), float(duration), float(met))
     conditions = f"{user_data.condition} (Level {user_data.cond_level})"
     new_record = {"exercise": exercise, "intensity": intensity, "duration": duration, "calories": calories, "bpm": bpm, "start_time": start_time, "remark": remark}
@@ -277,10 +279,11 @@ async def get_exercise_summary(user_id: str, exercise: str, intensity: str, dura
     exercise_records = format_exercise_records(previous_records)
     # calculate exercise bpm range
     min_bpm, max_bpm = cal_exercise_bpm_range(user_data.age)
+    print({'min': min_bpm, 'max': max_bpm})
     # prompt
     prompt = emma_exercise_summary(new_record, exercise_records, user_data.cur_weight, user_data.ga, conditions, user_data.complications, {'min': min_bpm, 'max': max_bpm})
     print(prompt)
-    llm_json = extract_json_from_text(await llm(prompt))
+    llm_json = extract_json_from_text(await llm(prompt, is_text=True))
     if not calories:
         calories = llm_json['calories']
     return EmmaComment(**llm_json), calories
