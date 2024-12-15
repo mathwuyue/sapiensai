@@ -11,6 +11,7 @@ from llm import llm
 from prompt import get_food_nutrients_prompt, emma_glu_summary, emma_exercise_summary
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, EmmaComment, DietaryData, DietarySummary, UserPreferenceData, UserBasicInfo
 from nutrition.db import db, UserPreference, MealData, ExerciseData, ExerciseDatabase
+from serve.db import Product
 from fastapi import HTTPException
 from utils import extract_json_from_text
 from logger import logger
@@ -20,12 +21,19 @@ dotenv.load_dotenv()
 BLOOM_KEY = os.getenv('BLOOM_KEY')
 
 
-async def analyze_food(image_base64: str) -> list[NutritionMacro, NutritionMicro, NutritionMineral]:
+async def analyze_food(user_id, image_base64: str, meal_type: int) -> list[NutritionMacro, NutritionMicro, NutritionMineral]:
     url = f"data:image/jpeg;base64,{image_base64}"
+    # get products
+    products = get_products()
+    userinfo = await get_user_info(user_id, is_formated=False)
+    if type(userinfo) is str:
+        userinfo = {'pre_weight': 58, 'is_twin': False, 'height': 1.75, 'ga': 12}
+    bmi = userinfo['pre_weight'] / (userinfo['height'] ** 2)
+    guidelines = {'calories': cal_calories_gdm(bmi, userinfo['pre_weight'], userinfo['is_twin'], userinfo['ga']), 'protein': cal_protein(userinfo['ga'])}
     prompt = [
         {
             "type": "text",
-            "text": get_food_nutrients_prompt()
+            "text": get_food_nutrients_prompt(meal_type=meal_type, products=products, guidelines=guidelines)
         }, {
             "type": "image_url",
             "image_url": {
@@ -34,16 +42,10 @@ async def analyze_food(image_base64: str) -> list[NutritionMacro, NutritionMicro
         }
     ]
     try:
-        result = await llm(prompt, model='qwen-vl-max', temperature=0.1)
+        result = await llm(prompt, model='qwen-vl-max', temperature=0.1, is_text=True)
         nutrition_data = extract_json_from_text(result)['items'][0]
         # print(nutrition_data)
-        # print(result)
-        # return results as NutritionMacro, NutritionMicro, NutritionMineral
-        return (
-            NutritionMacro(**nutrition_data['macro']),
-            NutritionMicro(**nutrition_data['micro']),
-            NutritionMineral(**nutrition_data['mineral'])
-        )
+        return nutrition_data
     except Exception as e:
         error_traceback = traceback.format_exc()
         print(f"Error analyzing food image: {error_traceback}")
@@ -69,7 +71,7 @@ async def dietary_recommendation(basicinfo: dict, glu: list, meals: list, orig_p
         )
         
         
-def cal_calories_gdm(bmi: float, weight: float, is_twins: bool, trimester: int) -> float:
+def cal_calories_gdm(bmi: float, weight: float, is_twins: bool, ga: int) -> float:
     addon = 400 if is_twins else 200
     if bmi < 18.5:
         calories = 35 * weight + addon
@@ -79,13 +81,19 @@ def cal_calories_gdm(bmi: float, weight: float, is_twins: bool, trimester: int) 
         calories = (30 - 5 / 3.9 * (bmi - 24)) * weight + addon
     else:
         calories = 25 * weight + addon
-    if trimester <= 12:
+    if ga <= 12:
         if calories < 1600:
             calories = 1600
-    elif trimester >= 26:
+    elif ga >= 26:
         if calories < 1800:
             calories = 1800
     return calories
+
+
+def cal_protein(ga: int) -> int:
+    if ga <= 12:
+        return 46
+    return 71
 
 
 def set_user_preferences(user_id: str, preferences: UserPreferenceData) -> None:
@@ -120,14 +128,21 @@ def get_user_preferences(user_id: str) -> UserPreferenceData:
             detail=f"Failed to generate dietary recommendation: {str(e)}"
         )
         
+        
+def get_products() -> str:
+    products = Product.select()
+    return "\n".join([f"{i+1}. {p.name}: {p.description}" for i, p in enumerate(products)])
+        
 
-async def get_user_info(user_id: str) -> str:
+async def get_user_info(user_id: str, is_formated=False) -> str:
     try:
         user_data = await httpx.AsyncClient().get(
             f"http://localhost:8000/api/v1/profile/user/{user_id}", 
             headers={"Authorization": f"Bearer {BLOOM_KEY}"}
         )
-        return format_user_basic_info(user_data.json())
+        if is_formated:
+            return format_user_basic_info(user_data.json())
+        return user_data.json()
     except:
         return "暂无"
 

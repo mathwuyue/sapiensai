@@ -188,29 +188,58 @@ def qa_prompt(query, context):
 
  
 @prompt
-def get_food_nutrients_prompt(food_img, meal_type, query='请分析这张食物图片并提供营养信息。'):
+def get_food_nutrients_prompt(meal_type, guidelines, products, is_userinfo=True, query='请分析这张食物图片并提供营养信息。'):
     '''Query: {{ query }}.  meal_type: {{ meal_type }} \n
+    {% if false(is_userinfo) %}
+    User did not provide any information. 
+    {% endif %}
     Tools: \n
     1. USDA FoodData: You search USDA National Nutrient Database for Standard Reference, and find calories, protein, fat, carb, folic acid, vitamine c, vitamine d, calcium, iron, zinc and iodine information of a food. \n
     2. GI and GL: You can search the database and get the glycemic index (GI) and glycemic load (GL) of a food. \n
     
-    Workflows: \n
+    # Guidelines: \n
+    1. User should take {{ guidelines['calories'] }} calories in total per day; \n
+    2. User should take {{ guidelines['protein'] }} protein in total per day; \n
+    3. User should take 150-175g of carbohydrates per day; \n
+    4. For micronutrient, user should take: Folic acid 60mcg/day, Vitamin C 85mg/day, Vitamin D 600 IU/day, Calcium 1000mg/day, Iodine 220 mcg/day, Iron 27mg/day, Zinc 11mg/day \n
+    
+    # Products: \n
+    <product> \n
+    {{ products }}
+    </product>\n
+    
+    # Workflows: \n
     Follow the steps below to analyze the food image and provide the nutrition information. \n
     1. Identify different food items in the image and count the number of items. \n
     2. For each item, use USDA FoodData to find calories, protein, fat, carb, folic acid, vitamine c, vitamine d, calcium, iron, zinc and iodine information. \n
     3. Count the total nutrition information calories, protein, fat, carb, folic acid, vitamine c, vitamine d, calcium, iron, zinc and iodine: sum(food item nutrition * number of food item). \n
     4. Make summary of food pictures from following aspects:
         1. Check GI and GL of the food. Point out any high GI and GL food. \n
-        2. Check the meal type
-                Return only a JSON with this exact structure:
-                {
-                "items": [{
-                    "macro": {"calories": float, "protein": float, "fat": float, "carb": float},
-                    "micro": {"fa": float, "vc": float, "vd": float},
-                    "mineral": {"calcium": float, "iron": float, "zinc": float, "iodine": float}
-                }],
-                "image_description": "brief description of the image"
-                }
+        2. Check the meal type. 1 is breakfast, 3 is lunch and 5 is dinner. These are main courses, you should check the balance of carb, protein, calories, fibre and vegetables. 2 and 4 are add meals between breakfast and lunch and afternoon tea, you should check fruit, milk and nuts. 6 is the meal before bed.
+        3. Check whether too much calories, fat, carbohydrates or sugar.
+    5. Make advice of user provided meal picture considering following aspects: \n
+        1. Check calories, protein, fat, carb, folic acid, vitamine c, vitamine d, calcium, iron, zinc and iodine and see whether they meet the guidelines one by one. \n
+        2. Low GI and GL food. \n
+        3. Check Products given in <product></product> XML tags, and recommend to user one or more products that meet her requirement. \n
+        4. If user follows all the guidelines, encourage user to follow the dietary given by you and keep good habit. \n
+        Your should think step by step likes following examples: \n
+        <example>
+        [Check] User take 10mcg folic acid in the meal. [Guideline] User should take 60mcg/day. [Advice] User should take more livers, as it contains much folic acid. But also, please try Folic Acid Tablet, if you do not like livers and the Folic Acid Tablets can help you better. \n
+        </example>
+    6. When making summary and advice, be concise and friendly and in the same language as query. Remember, even if the meal does not follow guidelines, you should still be friendly and encouraging. \n
+    7. Return only a JSON with this exact structure:
+    ```json
+            {
+            "foods": [{'food': string, 'count': float}],
+            "nutritients": [{
+                "macro": {"calories": float, "protein": float, "fat": float, "carb": float},
+                "micro": {"fa": float, "vc": float, "vd": float},
+                "mineral": {"calcium": float, "iron": float, "zinc": float, "iodine": float}
+            }],
+            "summary": "Summary goes here",
+            "advice": "Advice goes here"
+            }
+    ```
     '''
 
 
@@ -467,8 +496,9 @@ def emma_exercise_summary(exercise, exercise_records, weight, ga, conditions, co
     
     You should check user's exercises follow the guidelines and give advice: \n
     1. If user's conditions and complications are high-risk, you should ask the user not to exercise unless get direct instruction from professional doctors. \n
+    2. If user's conditions and complications not provided
     2. Exercise during pregnancy should focus on moderate-intensity aerobic activities. That is, if user provided [heart rate], it should be between {{ exercise_bpm['min'] }} and {{ exercise_bpm['max'] }}. If it is too low, the user should increase the intensity. If it is too high, user should decrease the intensity or duration and ask for the advice from professional. You should mention this in your summary. This is very important to the user. \n
-    3. At least 90 minutes of moderate-intensity aerobic activity per week is recommended. \n
+    3. At least 150 minutes of moderate-intensity aerobic activity per week is recommended. \n
     4. It is recommended to exercise 30 minutes after each meal, with a duration of 30 minutes per session. \n
     
     You should check the user's records whether they meet the guidelines. When checking a guideline, think step by step. \n

@@ -76,20 +76,17 @@ async def process_food_image(request: FoodRequest) -> NutritionResponse:
         # Convert to base64
         image_base64 = base64.b64encode(file_data).decode('utf-8')
         # Analyze food image
-        nutrition_info = await analyze_food(image_base64)
+        nutrition_info = await analyze_food(request.user_id, image_base64, request.type)
         # Save food data to MealData table
         meal = MealData.create(
             userid=request.user_id,
             type=request.type,
             url={'url': request.url, 'storage': request.storage},
-            nutrient={
-                'macro': nutrition_info[0].model_dump(),
-                'micro': nutrition_info[1].model_dump(),
-                'mineral': nutrition_info[2].model_dump()
-            },
-            updated_at=datetime.now()
+            food=nutrition_info['food'],
+            nutrient=nutrition_info['nutrients'],
+            emma={'summary': nutrition_info['summary'], 'advice': nutrition_info['advice']},
         )
-        return NutritionResponse(macro=nutrition_info[0], micro=nutrition_info[1], mineral=nutrition_info[2])
+        return nutrition_info
     except HTTPException:
         raise
     except Exception as e:
