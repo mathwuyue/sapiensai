@@ -11,11 +11,13 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+    console.log('Request body:', body);
 
     const stream = new ReadableStream({
       async start(controller) {
         const ws = new WebSocket(`${WS_URL}/v1/chat/completions`);
         let accumulatedContent = '';
+        let currentMessageId: string | null = null;
 
         ws.onopen = () => {
           console.log('WebSocket connected');
@@ -31,45 +33,62 @@ export async function POST(req: Request) {
           const data = typeof event.data === 'string' 
             ? JSON.parse(event.data)
             : JSON.parse(new TextDecoder().decode(event.data as ArrayBuffer));
+          
+          console.log('WebSocket received data:', data);
+
+          // 处理增量更新
+          if (data.choices?.[0]?.delta?.content) {
+            const deltaContent = data.choices[0].delta.content;
+
+            if (!currentMessageId) {
+              currentMessageId = data.id;
+              accumulatedContent = deltaContent;
+            } else {
+              accumulatedContent += deltaContent;
+            }
+
+            const deltaMessage = {
+              id: currentMessageId,
+              role: 'assistant',
+              content: accumulatedContent,
+              createdAt: new Date(data.created * 1000).toISOString()
+            };
+
+            const sseData = `data: ${JSON.stringify(deltaMessage)}\n\n`;
+            controller.enqueue(new TextEncoder().encode(sseData));
+          }
+          // 处理完整消息
+          else if (data.choices?.[0]?.message?.content) {
+            const content = data.choices[0].message.content;
+            
+            const message = {
+              id: data.id,
+              role: 'assistant',
+              content: content,
+              createdAt: new Date(data.created * 1000).toISOString()
+            };
+
+            const sseData = `data: ${JSON.stringify(message)}\n\n`;
+            controller.enqueue(new TextEncoder().encode(sseData));
+          }
 
           // 检查是否是结束消息
           if (data.choices?.[0]?.finish_reason === 'stop') {
             console.log('Received stop signal');
-            // 发送累积的内容
-            if (accumulatedContent) {
+            // 如果有累积的内容，发送最终消息
+            if (accumulatedContent && currentMessageId) {
               const finalMessage = {
-                id: data.id,
+                id: currentMessageId,
                 role: 'assistant',
                 content: accumulatedContent,
                 createdAt: new Date(data.created * 1000).toISOString()
               };
               const finalSSE = `data: ${JSON.stringify(finalMessage)}\n\n`;
+              console.log('Sending final message:', finalMessage);
               controller.enqueue(new TextEncoder().encode(finalSSE));
             }
             controller.close();
             return;
-          }
-
-          // 提取实际的消息内容
-          if (data.choices?.[0]?.delta?.content) {
-            const content = data.choices[0].delta.content;
-            accumulatedContent += content;
-            
-            // 直接发送增量更新
-            const deltaMessage = {
-              id: data.id,
-              choices: [{
-                delta: {
-                  content: content
-                },
-                finish_reason: null,
-                index: 0
-              }],
-              created: Math.floor(Date.now() / 1000)
-            };
-
-            const sseData = `data: ${JSON.stringify(deltaMessage)}\n\n`;
-            controller.enqueue(new TextEncoder().encode(sseData));
           }
         };
 
@@ -79,9 +98,8 @@ export async function POST(req: Request) {
         };
 
         ws.onclose = (e) => {
-          console.log('WebSocket closed', e);
+          console.log('WebSocket closed with code:', e.code, 'reason:', e.reason);
           controller.close();
-          // return new Response('Internal Server Error', { status: 500 });
         };
       }
     });
