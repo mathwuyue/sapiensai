@@ -1,3 +1,5 @@
+"use server";
+
 import { PresetCondition, PresetComplication } from './definitions';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
