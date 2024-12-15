@@ -121,6 +121,9 @@ export async function getProfile() {
     credentials: "include",
   });
   if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
     throw new Error("Failed to fetch profile");
   }
   const data = await response.json();
