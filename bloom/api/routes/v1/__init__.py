@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from api.routes.v1 import auth, users, patients, checkups, medical_records, food, glucose, profile
+from .exercise import router as exercise_router
 
 api_router = APIRouter()
 
@@ -57,4 +58,10 @@ api_router.include_router(
     profile.router,
     prefix="/profile",
     tags=["profile"]
+)
+# api_router.include_router(exercise_router, tags=["exercise"])
+api_router.include_router(
+    exercise_router,
+    prefix="/emma/exercise", 
+    tags=["exercise"]
 )

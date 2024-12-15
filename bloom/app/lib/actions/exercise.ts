@@ -9,6 +9,7 @@ const URL = process.env.NEXT_PUBLIC_API_URL;
 const BASE_URL = process.env.NEXT_PUBLIC_LLM_API_URL;
 const WS_URL = process.env.NEXT_PUBLIC_LLM_WS_URL;
 const LLM_API_TOKEN = process.env.LLM_API_TOKEN;
+const LOCAL_API_URL = "http://localhost:8000";
 
 const ExerciseSchema = z.object({
     exercise: z.string(),
@@ -156,26 +157,87 @@ export async function deleteExerciseRecord(id: string) {
   }
 }
 
-export async function fetchExerciseRecords() {
+// export async function fetchExerciseRecords() {
+//   try {
+//     const session = await auth();
+//     const response = await fetch(`${BASE_URL}/v1/emma/exercise`, {
+//         method: 'GET',
+//         headers: {
+//         'Content-Type': 'application/json',
+//         "Authorization": `Bearer ${LLM_API_TOKEN}`,
+//       },
+//     });
+
+//     if (!response.ok) {
+//       console.error('获取失败:', response);
+
+//       throw new Error('获取运动记录失败');
+//     }
+
+//     return response.json();
+//   } catch (error) {
+//     console.error('获取失败:', error);
+//     return [];
+//   }
+// }
+
+export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
+  let url = `${URL}/emma/exercise`;
+  //let url = `${LOCAL_API_URL}/v1/emma/exercise`; // 移除 /api 前缀
+
+  const session = await auth();
+
+  // const params = new URLSearchParams();
+  // if (startDate) {
+  //   params.append('start_date', startDate.toISOString());
+  // }
+  // if (endDate) {
+  //   params.append('end_date', endDate.toISOString());
+  // }
+  
+  // if (params.toString()) {
+  //   url += `?${params.toString()}`;
+  // }
+  
+  // const response = await fetch(url, {
+  //   method: 'GET',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${session?.accessToken}`
+  //   }
+  // });
+  
+  // if (!response.ok) {
+  //   const errorText = await response.text();
+  //     console.error('API Error:', errorText); // 添加错误日志
+  //   throw new Error('Failed to fetch exercises');
+  // }
+  
   try {
-    const session = await auth();
-    const response = await fetch(`${BASE_URL}/v1/emma/exercise`, {
-        method: 'GET',
-        headers: {
+    console.log('Fetching URL:', url); // 添加日志
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
         'Content-Type': 'application/json',
-        "Authorization": `Bearer ${LLM_API_TOKEN}`,
-      },
+        'Authorization': `Bearer ${session?.accessToken}`
+      }
     });
-
+    
+    console.log('Response status:', response.status); // 添加日志
+    
     if (!response.ok) {
-      console.error('获取失败:', response);
-
-      throw new Error('获取运动记录失败');
+      const errorText = await response.text();
+      console.error('API Error:', errorText); // 添加错误日志
+      throw new Error(`Failed to fetch exercises: ${response.status} ${errorText}`);
     }
-
-    return response.json();
+    
+    const data = await response.json();
+    console.log('Response data:', data); // 添加日志
+    return data;
+    
   } catch (error) {
-    console.error('获取失败:', error);
-    return [];
+    console.error('Fetch error:', error); // 添加错误日志
+    throw error;
   }
 }

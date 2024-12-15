@@ -138,3 +138,9 @@ export const INTENSITY_TYPES = [
   'normal',
   'high'
 ] as const;
+
+export interface ExerciseWithCalories extends Exercise {
+  calories: number;
+  summary?: string;
+  advice?: string;
+}
