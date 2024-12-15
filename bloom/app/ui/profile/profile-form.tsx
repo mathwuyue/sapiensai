@@ -47,14 +47,15 @@ export default function ProfileForm() {
     };
     const loadProfile = async () => {
       const profile = await getProfile();
-      setFormData(profile);
-      if (profile.conditions) {
-        const conditions = profile.conditions.map((condition) => ({
-          id: condition.preset_condition_id.toString(),
-          severity: condition.level,
-        }));
-        setSelectedConditions(conditions);
-      } else {
+      if (profile) {
+        setFormData(profile);
+        if (profile.conditions) {
+          const conditions = profile.conditions.map((condition) => ({
+            id: condition.preset_condition_id.toString(),
+            severity: condition.level,
+          }));
+          setSelectedConditions(conditions);
+        }
       }
     };
     loadProfile();

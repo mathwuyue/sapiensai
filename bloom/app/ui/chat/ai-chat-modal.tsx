@@ -128,74 +128,69 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
       return requestBody as unknown as JSONValue;
     },
     onResponse: async (response: Response) => {
-      console.log("Response received:", response);
       const reader = response.body?.getReader();
       let currentMessageId: string | null = null;
       let accumulatedContent = "";
 
-      if (reader) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = new TextDecoder().decode(value);
+      if (!reader) {
+        console.error("No reader available");
+        return;
+      }
 
-            const lines = chunk.split("\n");
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const jsonStr = line.slice(6).trim();
-                if (!jsonStr || jsonStr === "[DONE]") continue;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-                try {
-                  const data = JSON.parse(jsonStr);
-                  if (data.choices?.[0]?.delta?.content) {
-                    const deltaContent = data.choices[0].delta.content;
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split("\n");
 
-                    if (!currentMessageId) {
-                      currentMessageId = `msg_${Date.now()}_${Math.random()
-                        .toString(36)
-                        .substr(2, 9)}`;
-                      accumulatedContent = deltaContent;
-                    } else {
-                      accumulatedContent += deltaContent;
-                    }
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const jsonStr = line.slice(6).trim();
+              if (!jsonStr || jsonStr === "[DONE]") continue;
 
-                    setMessages((currentMessages) => {
-                      const newMessage = {
-                        id: currentMessageId!,
-                        role: "assistant" as const,
-                        content: accumulatedContent,
-                        createdAt: new Date(),
-                      };
+              try {
+                const data = JSON.parse(jsonStr);
 
-                      const existingMessageIndex = currentMessages.findIndex(
-                        (msg) => msg.id === currentMessageId
-                      );
+                setMessages((currentMessages) => {
+                  // 如果消息已存在，更新它
+                  const existingIndex = currentMessages.findIndex(
+                    (msg) => msg.id === data.id
+                  );
 
-                      if (existingMessageIndex >= 0) {
-                        const updatedMessages = [...currentMessages];
-                        updatedMessages[existingMessageIndex] = newMessage;
-                        return updatedMessages;
-                      } else {
-                        return [...currentMessages, newMessage];
-                      }
-                    });
+                  if (existingIndex >= 0) {
+                    const updatedMessages = [...currentMessages];
+                    updatedMessages[existingIndex] = {
+                      ...data,
+                      content: data.content,
+                    };
+                    return updatedMessages;
                   }
-                } catch (parseError) {
-                  console.error("JSON parse error:", parseError);
-                }
+
+                  // 否则添加新消息
+                  return [
+                    ...currentMessages,
+                    {
+                      ...data,
+                      content: data.content,
+                    },
+                  ];
+                });
+              } catch (error) {
+                console.error("Error parsing message:", error);
               }
             }
           }
-        } catch (e) {
-          console.error("Error reading response:", e);
-        } finally {
-          reader.releaseLock();
         }
+      } catch (error) {
+        console.error("Error reading stream:", error);
+      } finally {
+        reader.releaseLock();
       }
     },
     onFinish: (message) => {
-      console.log("Message finished:", message);
+      console.log("Chat finished:", message);
       scrollToBottomSmooth();
     },
     onError: (error) => {
