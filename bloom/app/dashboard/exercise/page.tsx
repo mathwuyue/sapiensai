@@ -30,7 +30,7 @@ export default function ExercisePage() {
         onClose={() => setIsModalOpen(false)}
       />
       <ExerciseChart />
-      {/* <ExerciseList /> */}
+      <ExerciseList />
     </div>
   );
 }

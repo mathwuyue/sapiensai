@@ -62,6 +62,6 @@ api_router.include_router(
 # api_router.include_router(exercise_router, tags=["exercise"])
 api_router.include_router(
     exercise_router,
-    prefix="/emma/exercise", 
+    prefix="/exercise", 
     tags=["exercise"]
 )

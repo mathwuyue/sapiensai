@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Text,Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -19,3 +19,6 @@ class Exercise(Base):  # 只声明一次
     emma = Column(String)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+    emma = Column(Text)  # 确保这个字段存在
+    #summary = Column(Text, nullable=True)  # 添加 summary
+    #advice = Column(Text, nullable=True)

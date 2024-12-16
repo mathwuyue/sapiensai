@@ -9,7 +9,6 @@ const URL = process.env.NEXT_PUBLIC_API_URL;
 const BASE_URL = process.env.NEXT_PUBLIC_LLM_API_URL;
 const WS_URL = process.env.NEXT_PUBLIC_LLM_WS_URL;
 const LLM_API_TOKEN = process.env.LLM_API_TOKEN;
-const LOCAL_API_URL = "http://localhost:8000";
 
 const ExerciseSchema = z.object({
     exercise: z.string(),
@@ -80,6 +79,16 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
     }
 
     const data = await response.json();
+    
+    
+
+    if (!response.ok) {
+        console.log("response", response);
+      return {
+        message: "Failed to create glucose readings"
+          };
+    }
+    
     return { 
       message: "Success",
       data:data,
@@ -97,26 +106,20 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
 
 export async function updateExerciseRecord(
   id: string,
-  data: {
-    type: string;
-    duration: number;
-    calories: number;
-    date: string;
-  }
+  summary: string,
+  advice: string
 ) {
   try {
     const session = await auth();
-    const response = await fetch(`${URL}/exercise/${id}`, {
+    const response = await fetch(`${URL}/exercise/${id}/feedback`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         "Authorization": `Bearer ${session?.accessToken}`,
       },
       body: JSON.stringify({
-        exercise_type: data.type,
-        duration: data.duration,
-        calories: data.calories,
-        exercise_date: data.date
+        summary: summary,
+        advice: advice
       })
     });
 
@@ -133,6 +136,7 @@ export async function updateExerciseRecord(
     throw error;
   }
 }
+
 
 export async function deleteExerciseRecord(id: string) {
   try {
@@ -182,7 +186,7 @@ export async function deleteExerciseRecord(id: string) {
 // }
 
 export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
-  let url = `${URL}/emma/exercise`;
+  let url = `${URL}/exercise`;
   //let url = `${LOCAL_API_URL}/v1/emma/exercise`; // 移除 /api 前缀
 
   const session = await auth();

@@ -102,14 +102,14 @@ export function ExerciseList() {
 
   return (
     <>
-    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+    {/* <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
       <BarChart accessibilityLayer data={data}>
         <>
           <XAxis dataKey="start_time" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(value) => value.slice(0, 3)} />
           <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
         </>
       </BarChart>
-    </ChartContainer>
+    </ChartContainer> */}
     
     <div className="space-y-4">
       {records.map((record: any) => (
@@ -122,13 +122,18 @@ export function ExerciseList() {
               </p>
             </div>
             <div className="text-right">
-              <p>时长: {record.duration}分钟</p>
-              <p>强度: {record.intensity}</p>
+              <p>Length: {record.duration} minutes</p>
+              <p>Intensity: {record.intensity}</p>
             </div>
           </div>
           {record.bpm && (
-            <p className="mt-2 text-sm">心率: {record.bpm}</p>
+            <p className="mt-2 text-sm">Heart Rate: {record.bpm}</p>
           )}
+          {
+            record.calories && (
+              <p className="mt-2 text-sm">Calories: {record.calories}</p>
+            )
+          }
           {record.remark && (
             <p className="mt-2 text-sm text-gray-600">{record.remark}</p>
           )}
@@ -136,7 +141,7 @@ export function ExerciseList() {
             <div className="mt-3 p-3 bg-gray-50 rounded">
               <p className="text-sm">{record.summary}</p>
               {record.advice && (
-                <p className="mt-2 text-sm text-blue-600">建议：{record.advice}</p>
+                <p className="mt-2 text-sm text-blue-600">Advice: {record.advice}</p>
               )}
             </div>
           )}

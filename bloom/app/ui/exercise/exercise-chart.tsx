@@ -1,6 +1,6 @@
 import { Exercise, ExerciseType, ExerciseIntensity, ExerciseWithCalories } from "@/app/lib/definitions";
 
-import { Bar, BarChart,CartesianGrid,XAxis,YAxis } from "recharts"
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
  
 import { ChartContainer, ChartTooltipContent,type ChartConfig } from "@/components/ui/chart"
  
@@ -69,14 +69,24 @@ export function ExerciseChart() {
     //     <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
     //   </BarChart>
     // </ChartContainer>
-    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-      <BarChart accessibilityLayer data={data}>
-        <>
-          <XAxis dataKey="start_time" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(value) => value.slice(0, 3)} />
-          <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
-        </>
-      </BarChart>
-    </ChartContainer>
+    <div className="w-full h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="start_time" 
+            tickFormatter={(value) => new Date(value).toLocaleDateString()}
+          />
+          <YAxis />
+          <Tooltip />
+          <Bar 
+            dataKey="calories" 
+            fill="#2563eb"
+            radius={4}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
     
   )
 }

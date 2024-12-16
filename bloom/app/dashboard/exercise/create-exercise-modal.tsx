@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createExerciseRecord } from "@/app/lib/actions/exercise";
+import { createExerciseRecord, updateExerciseRecord } from "@/app/lib/actions/exercise";
 import { PlusCircle, Trash2 } from "lucide-react";
 import internal from "stream";
 import { Exercise, ExerciseType, ExerciseIntensity, EXERCISE_TYPES, INTENSITY_TYPES } from "@/app/lib/definitions";
@@ -118,6 +118,12 @@ export function CreateExerciseModal({ isOpen, onClose }: CreateExerciseModalProp
           });
         const response = await createExerciseRecord({}, form);
         console.log('API 响应:', response);
+        if (response && response.data && response.data.id) {  // 确保 id 存在
+          await updateExerciseRecord(response.data.id,
+            response.data.summary,
+            response.data.advice
+          );
+        }
 
       if (!response) {
         toast({
@@ -128,7 +134,7 @@ export function CreateExerciseModal({ isOpen, onClose }: CreateExerciseModalProp
         return;
       }
       
-          if (response.message === "Success") {
+          if (response?.message === 'Success') {
             toast({
               title: "Exercise Record Added Successfully!",
               description: (
