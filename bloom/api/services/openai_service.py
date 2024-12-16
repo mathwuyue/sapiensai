@@ -3,59 +3,76 @@ import re
 from typing import Dict, Any
 from openai import AsyncOpenAI
 from api.core.config import settings
-from api.schemas.food import FoodAnalysis, FoodItem
+from api.schemas.food import (
+    FoodAnalyzeBase,
+    FoodItem,
+    Nutrients,
+    MacroNutrients,
+    MicroNutrients,
+    Minerals,
+)
 
-client = AsyncOpenAI(api_key=settings.QWEN_API_KEY, base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
+client = AsyncOpenAI(
+    api_key=settings.QWEN_API_KEY,
+    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+)
 
 def extract_json_from_text(text: str) -> Dict[str, Any]:
-    """
-    Extract JSON from text response, handling cases where JSON might be within markdown code blocks
-    or mixed with other text
-    """
-    # Try to find JSON block in markdown
-    json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
-    if json_match:
-        json_str = json_match.group(1)
-    else:
-        # Try to find any JSON-like structure
-        json_match = re.search(r'\{.*\}', text, re.DOTALL)
-        if json_match:
-            json_str = json_match.group(0)
-        else:
-            raise ValueError("No JSON found in response")
+    """Extract JSON from text response"""
+    json_match = re.search(r'\{.*\}', text, re.DOTALL)
+    if not json_match:
+        raise ValueError("No JSON found in response")
     
     try:
-        return json.loads(json_str)
+        return json.loads(json_match.group(0))
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse JSON: {str(e)}")
 
-async def analyze_food_image(base64_image: str) -> FoodAnalysis:
-    """
-    Analyze food image using OpenAI's Vision API
-    """
+async def analyze_food_image(base64_image: str) -> FoodAnalyzeBase:
+    """Analyze food image using Qwen VL API"""
     try:
         response = await client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="qwen-vl-max",
             messages=[
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": """Please analyze this food image and provide the following information in JSON format:
+                            "text": """Please analyze this food image and provide information in the following JSON format:
+                            {
+                                "foods": [
                                     {
-                                        "items": [
-                                            {
-                                                "name": "food name",
-                                                "calories": estimated calories (number),
-                                                "portion": "portion size",
-                                                "protein": estimated protein in grams (number),
-                                                "carbs": estimated carbs in grams (number),
-                                                "fat": estimated fat in grams (number)
-                                            }
-                                        ],
-                                        "image_description": "brief description of the image"
-                                    }"""
+                                        "food": "name of the food",
+                                        "count": "portion count (number)"
+                                    }
+                                ],
+                                "nutrients": {
+                                    "macro": {
+                                        "calories": "total calories (number)",
+                                        "protein": "protein in grams (number)",
+                                        "fat": "fat in grams (number)",
+                                        "carb": "carbohydrates in grams (number)"
+                                    },
+                                    "micro": {
+                                        "fa": "dietary fiber in grams (number)",
+                                        "vc": "vitamin C in mg (number)",
+                                        "vd": "vitamin D in mcg (number)"
+                                    },
+                                    "mineral": {
+                                        "calcium": "calcium in mg (number)",
+                                        "iron": "iron in mg (number)",
+                                        "zinc": "zinc in mg (number)",
+                                        "iodine": "iodine in mcg (number)"
+                                    }
+                                },
+                                "summary": "overall nutritional assessment",
+                                "advice": "suggestions for improvement"
+                            }
+                            
+                            Please ensure all numerical values are numbers, not strings. 
+                            If you cannot determine exact nutritional content, provide reasonable estimates.
+                            Keep the summary and advice concise but informative."""
                         },
                         {
                             "type": "image_url",
@@ -66,32 +83,47 @@ async def analyze_food_image(base64_image: str) -> FoodAnalysis:
                     ]
                 }
             ],
-            max_tokens=1000
+            max_tokens=2000,
+            temperature=0.2
         )
 
-        # Extract and parse JSON from response
         content = response.choices[0].message.content
         data = extract_json_from_text(content)
         
-        # Convert parsed data to FoodItems
-        food_items = [
-            FoodItem(
-                name=item["name"],
-                calories=float(item["calories"]),
-                portion=item.get("portion"),
-                protein=float(item["protein"]) if "protein" in item else None,
-                carbs=float(item["carbs"]) if "carbs" in item else None,
-                fat=float(item["fat"]) if "fat" in item else None
-            )
-            for item in data["items"]
-        ]
+        # Convert raw data to Pydantic models
+        macro = MacroNutrients(
+            calories=float(data["nutrients"]["macro"]["calories"]),
+            protein=float(data["nutrients"]["macro"]["protein"]),
+            fat=float(data["nutrients"]["macro"]["fat"]),
+            carb=float(data["nutrients"]["macro"]["carb"])
+        )
         
-        # Create and return FoodAnalysis
-        return FoodAnalysis(
-            items=food_items,
-            total_calories=sum(item.calories for item in food_items),
-            image_description=data["image_description"]
+        micro = MicroNutrients(
+            fa=float(data["nutrients"]["micro"]["fa"]),
+            vc=float(data["nutrients"]["micro"]["vc"]),
+            vd=float(data["nutrients"]["micro"]["vd"])
+        )
+        
+        mineral = Minerals(
+            calcium=float(data["nutrients"]["mineral"]["calcium"]),
+            iron=float(data["nutrients"]["mineral"]["iron"]),
+            zinc=float(data["nutrients"]["mineral"]["zinc"]),
+            iodine=float(data["nutrients"]["mineral"]["iodine"])
+        )
+        
+        nutrients = Nutrients(
+            macro=macro,
+            micro=micro,
+            mineral=mineral
+        )
+        
+        # Create final analysis result
+        return FoodAnalyzeBase(
+            foods=[FoodItem(**item) for item in data["foods"]],
+            nutrients=nutrients,
+            summary=data["summary"],
+            advice=data["advice"]
         )
 
     except Exception as e:
-        raise Exception(f"OpenAI API error: {str(e)}") 
+        raise Exception(f"API error: {str(e)}") 

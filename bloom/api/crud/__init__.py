@@ -7,6 +7,8 @@ from .lab_results import lab_results
 from .prenatal_screening import prenatal_screening
 from .recommendation import recommendation
 from .profile import *
+from .glucose import *
+from .food import *
 __all__ = [
     "user",
     "patient",
@@ -16,5 +18,7 @@ __all__ = [
     "lab_results",
     "prenatal_screening",
     "recommendation",
-    "profile"
+    "profile",
+    "glucose",
+    "food"
 ] 

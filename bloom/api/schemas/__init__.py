@@ -6,9 +6,9 @@ from .ultrasound import Ultrasound, UltrasoundCreate, UltrasoundUpdate
 from .lab_results import LabResults, LabResultsCreate, LabResultsUpdate
 from .prenatal_screening import PrenatalScreening, PrenatalScreeningCreate, PrenatalScreeningUpdate
 from .recommendation import Recommendation, RecommendationCreate, RecommendationUpdate
-from .food import FoodAnalysis, FoodItem
 from .glucose import Glucose, GlucoseCreate, GlucoseUpdate
 from .profile import Profile, ProfileCreate, ProfileUpdate, UserCondition, UserComplication
+from .food import FoodAnalyze
 from pydantic import BaseModel
 
 __all__ = [
@@ -23,7 +23,8 @@ __all__ = [
     "FoodAnalysis", "FoodItem",
     "Glucose", "GlucoseCreate", "GlucoseUpdate",
     "Profile", "ProfileCreate", "ProfileUpdate",
-    "UserCondition", "UserComplication"
+    "UserCondition", "UserComplication",
+    "FoodAnalyze"
 ]
 
 class TokenPayload(BaseModel):

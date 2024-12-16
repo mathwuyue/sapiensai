@@ -14,7 +14,7 @@ from api.db.base_class import Base
 from api.models import (
     User, Patient, Checkup, VitalSigns, 
     Ultrasound, LabResults, PrenatalScreening, 
-    Recommendation
+    Recommendation, FoodAnalyze
 )
 
 # this is the Alembic Config object, which provides
@@ -35,6 +35,7 @@ tables_ordered = [
     LabResults.__table__,
     PrenatalScreening.__table__,
     Recommendation.__table__,
+    FoodAnalyze.__table__,
 ]
 
 # add your model's MetaData object here
@@ -52,6 +53,13 @@ for table in tables_ordered:
 
 config.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URL)
 
+def include_object(object, name, type_, reflected, compare_to):
+    """only include bloom tables"""
+    if type_ == "table":
+        return name.startswith('bloom_')
+    return True
+
+
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -59,13 +67,18 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

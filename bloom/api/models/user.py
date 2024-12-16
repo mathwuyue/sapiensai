@@ -16,3 +16,4 @@ class User(Base):
     profile = relationship("Profile", back_populates="user")
     patients = relationship("Patient", back_populates="user")
     checkups = relationship("Checkup", back_populates="user")
+    food_analyses = relationship("FoodAnalyze", back_populates="user")

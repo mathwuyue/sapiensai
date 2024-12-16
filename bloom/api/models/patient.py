@@ -15,4 +15,4 @@ class Patient(Base):
     emergency_contact = Column(String(50))
 
     # Relationships
-    user = relationship("User", backref="patient")
+    user = relationship("User", back_populates="patients")
