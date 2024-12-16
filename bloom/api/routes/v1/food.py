@@ -6,32 +6,18 @@ import logging
 import os
 from datetime import datetime
 import aiofiles
-from contextlib import asynccontextmanager
 from api.models.user import User
 from api.core.config import settings
 from api import crud, models, schemas
 from api.core.dependencies import get_db, get_current_user
 from api.services.openai_service import analyze_food_image
 from api.schemas.food import FoodAnalyze, FoodAnalyzeCreate
-from api.db.session import async_session
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # Ensure upload directory exists
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-
-@asynccontextmanager
-async def managed_db_session(db: AsyncSession):
-    """Database session manager"""
-    try:
-        yield db
-        await db.commit()
-    except Exception as e:
-        await db.rollback()
-        raise
-    finally:
-        await db.close()
 
 async def save_upload_file(file: UploadFile, contents: bytes) -> str:
     """Save uploaded file and return file path"""
@@ -75,7 +61,7 @@ async def analyze_food(
             **analysis_result.model_dump()
         )
         
-        # 4. 使用依赖注入的会话处理数据库操作
+        # 4. 使用事务处理数据库操作
         db_obj = await crud.food.create_with_user(
             db=db,
             obj_in=food_analysis,
@@ -103,14 +89,13 @@ async def get_food_analyses(
     limit: int = 10,
 ) -> Any:
     """Get list of food analyses for current user"""
-    async with managed_db_session(db) as session:
-        analyses = await crud.food.get_multi_by_user(
-            db=session,
-            user_id=current_user.id,
-            skip=skip,
-            limit=limit
-        )
-        return analyses
+    analyses = await crud.food.get_multi_by_user(
+        db=db,
+        user_id=current_user.id,
+        skip=skip,
+        limit=limit
+    )
+    return [analysis.to_schema() for analysis in analyses]
 
 @router.get("/analyses/{analysis_id}", response_model=FoodAnalyze)
 async def get_food_analysis(
@@ -119,15 +104,14 @@ async def get_food_analysis(
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """Get specific food analysis by ID"""
-    async with managed_db_session(db) as session:
-        analysis = await crud.food.get_by_id_and_user(
-            db=session,
-            id=analysis_id,
-            user_id=current_user.id
+    analysis = await crud.food.get_by_id_and_user(
+        db=db,
+        id=analysis_id,
+        user_id=current_user.id
+    )
+    if not analysis:
+        raise HTTPException(
+            status_code=404,
+            detail="Food analysis not found"
         )
-        if not analysis:
-            raise HTTPException(
-                status_code=404,
-                detail="Food analysis not found"
-            )
-        return analysis
+    return analysis.to_schema()

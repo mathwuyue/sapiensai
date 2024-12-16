@@ -71,5 +71,6 @@ class FoodAnalyze(Base):
                 }
             },
             summary=self.summary,
-            advice=self.advice
+            advice=self.advice,
+            created_at=self.created_at
         )
