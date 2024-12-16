@@ -7,7 +7,7 @@ import traceback
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 import base64
-from storage.huawei import get_file as hw_get_file
+from storage.oss import get_file as oss_get_file
 from storage.local import get_file as local_get_file
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, UserBasicInfo
 from nutrition.db import MealData, ExerciseData
@@ -65,7 +65,7 @@ async def process_food_image(request: FoodRequest) -> NutritionResponse:
     try:
         # Get file from storage
         if not request.storage:
-            file_data = hw_get_file(request.url)
+            file_data = oss_get_file(request.url)
         elif request.storage == 'local':
             file_data = local_get_file(request.url)
         else:

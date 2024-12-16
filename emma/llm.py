@@ -30,8 +30,11 @@ LLM_PROVIDER = {
 }
 
 
-async def llm(query: str, model: str = os.getenv('MODEL'), stream=False, temperature=0.85, top_p=0.8, history=[], json_format=None, is_text=False) -> str:
-    messages = history + [{"role": "user", "content": query}]
+async def llm(query: str, model: str = os.getenv('MODEL'), sys_msg=None, stream=False, temperature=0.85, top_p=0.8, history=[], json_format=None, is_text=False) -> str:
+    if sys_msg:
+        messages = [{'role': 'system', 'content': sys_msg}] + history + [{"role": "user", "content": query}]
+    else:
+        messages = history + [{"role": "user", "content": query}]
     llm_provider = LLM_PROVIDER.get(model, None)
     try:
         start = time.time()

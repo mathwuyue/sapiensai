@@ -7,7 +7,7 @@ from router import RouterOptions, UserIntentionRouter
 from pydantic import BaseModel
 from agent.agent import NullAgent, AgentConfig, ChatAgent
 import redis
-from typing import Dict, Any
+from typing import Dict, Any, AsyncGenerator
 import uuid
 import time
 from prompt import emma_chat, emma_future, emma_fitness, emma_nutrition
@@ -43,7 +43,7 @@ user_intents = [
 options = RouterOptions(options=user_intents)
 
 
-async def workflow(query: Query, config: str, websocket) -> str:
+async def workflow(query: Query, config: str, websocket) -> AsyncGenerator[Dict[str, Any], None]:
     # TODO: event_id should be generated only for a new conversation
     r = redis.Redis()
     event_id = 'chatcmpl-' + r.get('fp').decode() + '-' + str(r.incr('event_num'))
@@ -53,21 +53,36 @@ async def workflow(query: Query, config: str, websocket) -> str:
     question = query.content
     choice = await router.classify(question)
     if choice.get('message'):
-        print(6)
+        print("Others")
         agent = NullAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         async for chunk in agent.act(question, choice['message']):
             yield chunk
     elif int(choice.get('choice')) == 1:
         pass
     elif int(choice.get('choice')) == 2:
-        pass    
+        print('food & nutrition')
+        emma_nutrition_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
+        context = {
+            'userinfo': None,
+            'food_preference': None,
+            'glu_summary': None,
+            'meal': None,
+            'products': None
+        }
+        async for chunk in emma_nutrition_agent.act(question, 0, 'default', emma_nutrition, context, stream=False):
+            response = chunk.choices[0].message.content
+            resp_json = extract_json_from_text(response)
+            chunk.choices[0].message.content = resp_json['message']
+            yield chunk
     elif int(choice.get('choice')) == 3:
         print('health')
         emma_future_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         userinfo = await get_user_info(config['user_id'])
         # Extract gestational age from userinfo
-        print(userinfo)
-        ga_weeks = int(''.join(filter(str.isdigit, userinfo.split('Gestational Age: ')[1].split(' weeks')[0])))
+        if type(userinfo) is str:
+            ga_weeks = 12
+        else:
+            ga_weeks = userinfo['ga']
         if config['is_thought']:
             async for chunk in emma_future_agent.act(question, 0, 'default', emma_future, {'context': ga_weeks}, stream=True):
                 yield chunk

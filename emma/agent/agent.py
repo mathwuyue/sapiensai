@@ -64,7 +64,7 @@ class Agent:
             logger.error(f"Failed to store history: {e}")
             raise
         
-    async def _user_llm(self, query: str, model: str, history: list, temperature: float = 0.85, stream: bool = False):
+    async def _user_llm(self, query: str, sys_msg: str, history: list, temperature: float = 0.85, stream: bool = False):
         """User LLM. Final return to user
             TODO: how to decide the conversation state?
         """
@@ -76,7 +76,7 @@ class Agent:
                     agent_resp += chunk.choices[0].delta.content
                 yield chunk
         else:
-            llm_resp = await llm(query, model=self.config.model, history=history, temperature=temperature, stream=stream)
+            llm_resp = await llm(query, model=self.config.model, sys_msg=sys_msg, history=history, temperature=temperature, stream=stream)
             agent_resp = llm_resp.choices[0].message.content
             yield llm_resp
         # save to history
@@ -92,10 +92,10 @@ class ChatAgent(Agent):
         # create query
         if agent_type == 'default':
             if context:
-                llm_query = template(query, **context)
+                system_msg = template(query, **context)
             else:
-                llm_query = template(query)
-            async for chunk in self._user_llm(llm_query, self.config.model, history, temperature, stream):
+                system_msg = template(query)
+            async for chunk in self._user_llm(query, system_msg, history, temperature, stream):
                 yield chunk
 
 

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, model_validator, field_validator
 from typing import List, Dict, Any, Optional, Self
 import uuid
+from datetime import datetime
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, DietaryData, DietarySummary
 
 
@@ -106,3 +107,14 @@ class DietaryResponse(BaseModel):
     def check_dietary_length(self) -> Self:
         assert len(self.dietary) == self.days
         return self
+    
+    
+class ExerciseDataRequest(BaseModel):
+    user_id: str
+    exercise: str
+    duration: float
+    weight: Optional[float] = 55
+    intensity: Optional[str] = 'normal'
+    bpm: Optional[float] = 0.0
+    remark: Optional[str] = None
+    start_time: Optional[datetime] = None

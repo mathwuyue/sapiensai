@@ -8,8 +8,8 @@ import time
 from pathlib import Path
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
-import base64
-from storage.huawei import get_file as hw_get_file
+from serve.model import ExerciseDataRequest
+from storage.oss import get_file as oss_get_file
 from storage.local import get_file as local_get_file
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral
 from prompt import get_food_nutrients_prompt
@@ -41,17 +41,6 @@ class UserInfoRequest(BaseModel):
 #             status_code=500,
 #             detail=f"Failed to generate dietary recommendations: {str(e)}"
 #         )
-
-  
-class ExerciseDataRequest(BaseModel):
-    user_id: str
-    exercise: str
-    duration: float
-    weight: Optional[float] = 55
-    intensity: Optional[str] = 'normal'
-    bpm: Optional[float] = 0.0
-    remark: Optional[str] = None
-    start_time: Optional[datetime] = None
 
 
 @router.post("/v1/emma/exercise")
