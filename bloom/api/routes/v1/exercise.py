@@ -42,28 +42,29 @@ router = APIRouter()
     
 #     return updated_record
 
-@router.put("/{exercise_id}/feedback")
-async def update_exercise_feedback(
-    id: int,
-    summary: str,
-    advice: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-) -> ExerciseResponse:
-    print(f"Received feedback request: {feedback}")  # 调试日志
+# @router.put("/{exercise_id}/feedback")
+# async def update_exercise_feedback(
+#     id: int,
+#     summary: str,
+#     advice: str,
+#     db: AsyncSession = Depends(get_db),
+#     current_user: User = Depends(get_current_user)
+# ) -> ExerciseResponse:
+#     print(f"Received feedback request: {feedback}")  # 调试日志
 
-    updated_exercise = await exercise.update_exercise_feedback(
-        db=db,
-        exercise_id=id,
-        summary=summary,
-        advice=advice
-    )
+#     updated_exercise = await exercise.update_exercise_feedback(
+#         db=db,
+#         exercise_id=id,
+#         summary=summary,
+#         advice=advice
+#     )
     
-    if not updated_exercise:
-        raise HTTPException(status_code=404, detail="Exercise record not found")
+#     if not updated_exercise:
+#         raise HTTPException(status_code=404, detail="Exercise record not found")
         
-    return updated_exercise
+#     return updated_exercise
    
+
 @router.get("/", response_model=List[ExerciseResponse])
 async def get_user_exercises(
     db: AsyncSession = Depends(get_db),
@@ -81,3 +82,13 @@ async def get_user_exercises(
         limit=limit
     )
     return list(exercises)
+
+@router.delete("/{id}")
+async def delete_exercise(
+    id: int,
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    deleted = await exercise.remove(db=db, exercise_id=id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Exercise not found")
+    return {"status": "success", "message": "Exercise deleted"}

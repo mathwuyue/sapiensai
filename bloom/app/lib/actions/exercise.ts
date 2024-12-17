@@ -238,8 +238,22 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
     
     const data = await response.json();
     console.log('Response data:', data); // 添加日志
-    return data;
-    
+    return data.map((record: any) => {
+      let emmaData = { summary: null, advice: null };
+      if (record.emma) {
+        try {
+          emmaData = JSON.parse(record.emma);
+        } catch (e) {
+          console.error('Error parsing emma data:', e);
+        }
+      }
+
+      return {
+        ...record,
+        summary: emmaData.summary,
+        advice: emmaData.advice
+      };
+    });  
   } catch (error) {
     console.error('Fetch error:', error); // 添加错误日志
     throw error;

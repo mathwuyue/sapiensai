@@ -12,7 +12,6 @@ class ExerciseCreate(BaseModel):
     remark: Optional[str] = None
     summary: Optional[str] = None
     advice: Optional[str] = None
-    emma: Optional[str] = None     # 实际存储 JSON 的字段
 
 
 class ExerciseResponse(BaseModel):
@@ -28,6 +27,7 @@ class ExerciseResponse(BaseModel):
     start_time: datetime
     created_at: datetime
     updated_at: datetime
+    emma: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -1,6 +1,6 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, desc,cast, String
+from sqlalchemy import select, update, delete, desc, cast, String
 from datetime import datetime
 from api.schemas.exercise import ExerciseCreate
 import json
@@ -64,5 +64,16 @@ class CRUDExercise:
             
         result = await db.execute(query)
         return result.scalars().all()
+    
+    async def remove(
+    self,
+    db: AsyncSession,
+        id: int
+    ) -> bool:
+        """删除运动记录"""
+        stmt = delete(Exercise).where(Exercise.id == id)
+        result = await db.execute(stmt)
+        await db.commit()
+        return result.rowcount > 0
 
 exercise = CRUDExercise()

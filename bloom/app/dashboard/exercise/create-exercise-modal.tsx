@@ -236,33 +236,8 @@ export function CreateExerciseModal({ isOpen, onClose }: CreateExerciseModalProp
           <DialogTitle>Add Exercise Record</DialogTitle>
         </DialogHeader>
 
-        {/* {message && (
-        <div className={`p-4 rounded-md ${
-          message.includes('Failed') 
-            ? 'bg-red-100 text-red-800' 
-            : 'bg-green-100 text-green-800'
-        }`}>
-          {message}
-        </div>
-      )} */}
+        
 
-      {/* {feedback && (
-        <div className="mt-4 space-y-4">
-          {feedback.summary && (
-            <div className="p-4 rounded-md bg-blue-50">
-              <h3 className="font-semibold text-blue-800 mb-2">Exercise Summary</h3>
-              <p className="text-blue-700">{feedback.summary}</p>
-            </div>
-          )}
-          
-          {feedback.advice && (
-            <div className="p-4 rounded-md bg-green-50">
-              <h3 className="font-semibold text-green-800 mb-2">Advice</h3>
-              <p className="text-green-700">{feedback.advice}</p>
-            </div>
-          )}
-        </div>
-      )} */}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           
