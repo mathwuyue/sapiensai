@@ -68,10 +68,10 @@ class CRUDExercise:
     async def remove(
     self,
     db: AsyncSession,
-        id: int
+    exercise_id: int
     ) -> bool:
         """删除运动记录"""
-        stmt = delete(Exercise).where(Exercise.id == id)
+        stmt = delete(Exercise).where(Exercise.id == exercise_id)
         result = await db.execute(stmt)
         await db.commit()
         return result.rowcount > 0

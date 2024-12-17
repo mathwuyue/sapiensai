@@ -1,4 +1,4 @@
-import { fetchExerciseRecords } from "@/app/lib/actions/exercise";
+import { fetchExerciseRecords, deleteExerciseRecord } from "@/app/lib/actions/exercise";
 import { useEffect, useState } from "react";
 import { Exercise, ExerciseType, ExerciseIntensity, ExerciseWithCalories } from "@/app/lib/definitions";
 
@@ -21,6 +21,7 @@ const chartConfig = {
 export function ExerciseList() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadRecords() {
@@ -37,6 +38,17 @@ export function ExerciseList() {
     loadRecords();
   }, []);
 
+  const handleDelete = async (id: number) => {
+    if (confirm('Are you sure you want to delete this record?')) {
+      try {
+        await deleteExerciseRecord(id);
+        setRecords(records.filter((record:any) => record.id !== id));
+        //setDeleteId(null);
+      } catch (error) {
+        console.error('Delete failed:', error);
+      }
+    }
+  };
   const caloriesData = records.map((record: any) => ({
     calories: Math.round(record.calories),
     start_time: record.start_time
@@ -78,6 +90,12 @@ export function ExerciseList() {
       {records.map((record: any) => (
         <div key={record.id} className="p-4 border rounded-lg">
           <div className="flex justify-between items-start">
+          <button
+          onClick={() => handleDelete(record.id)}
+          className="text-red-600 hover:text-red-800"
+          >
+          Delete
+          </button>
             <div>
               <h3 className="font-medium">{record.exercise}</h3>
               <p className="text-sm text-gray-500">

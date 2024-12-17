@@ -138,7 +138,7 @@ export async function updateExerciseRecord(
 }
 
 
-export async function deleteExerciseRecord(id: string) {
+export async function deleteExerciseRecord(id: number) {
   try {
     const session = await auth();
     const response = await fetch(`${URL}/exercise/${id}`, {
@@ -150,7 +150,9 @@ export async function deleteExerciseRecord(id: string) {
     });
 
     if (!response.ok) {
-      throw new Error(await response.text());
+      const errorText = await response.text();
+      console.error('Delete failed:', errorText);
+      throw new Error(`Failed to delete exercise: ${errorText}`);
     }
 
     revalidatePath('/dashboard/exercise');

@@ -83,12 +83,27 @@ async def get_user_exercises(
     )
     return list(exercises)
 
-@router.delete("/{id}")
+@router.delete("/{exercise_id}")
 async def delete_exercise(
-    id: int,
-    db: AsyncSession = Depends(get_db)
+    exercise_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # 添加用户认证
 ) -> dict:
-    deleted = await exercise.remove(db=db, exercise_id=id)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Exercise not found")
-    return {"status": "success", "message": "Exercise deleted"}
+    try:
+        deleted = await exercise.remove(db=db, exercise_id=exercise_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=404,
+                detail="Exercise not found"
+            )
+        return {
+            "status": "success",
+            "message": "Exercise deleted",
+            "id": exercise_id
+        }
+    except Exception as e:
+        print(f"Error deleting exercise: {str(e)}")  # 添加日志
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
