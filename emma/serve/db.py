@@ -77,7 +77,7 @@ class Product(BaseModel):
     price = DecimalField(max_digits=10, decimal_places=2)
     brief = CharField(max_length=512)
     description = TextField()
-    meta = BinaryJSONField()
+    meta = BinaryJSONField(null=True)
     
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()

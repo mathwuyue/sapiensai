@@ -7,7 +7,7 @@ from botocore.config import Config
 ak = os.getenv("OSS_AccessKey")
 sk = os.getenv("OSS_SecretKey")
 session_token = os.getenv("OSS_SessionToken")
-endpoint = "obs.cn-north-4.myhuaweicloud.com"
+endpoint = "https://oss-cn-hongkong.aliyuncs.com"
 bucketName = "qihaotest"
 # 创建obsClient实例
 # 如果使用临时AKSK和SecurityToken访问OBS，需要在创建实例时通过security_token参数指定securityToken值

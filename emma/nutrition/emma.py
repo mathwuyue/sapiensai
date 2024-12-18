@@ -8,7 +8,7 @@ import dotenv
 from datetime import datetime, timedelta
 from typing import Dict, Any, Tuple
 from llm import llm
-from prompt import get_food_nutrients_prompt, emma_glu_summary, emma_exercise_summary
+from prompt import get_food_nutrients_prompt, emma_glu_summary, emma_exercise_summary, user_preference_summary
 from nutrition.model import NutritionMacro, NutritionMicro, NutritionMineral, EmmaComment, DietaryData, DietarySummary, UserPreferenceData, UserBasicInfo
 from nutrition.db import db, UserPreference, MealData, ExerciseData, ExerciseDatabase
 from serve.db import Product
@@ -53,15 +53,16 @@ async def analyze_food(user_id, image_base64: str, meal_type: int) -> list[Nutri
         raise e
         
 
-async def dietary_recommendation(basicinfo: dict, glu: list, meals: list, orig_plan: str) -> list[DietarySummary, list[DietaryData]]:
-    prompt = [
-        {
-            "type": "text",
-            "text": "Provide dietary recommendations for the user"
-        }
-    ]
+async def dietary_recommendation(user_id: str) -> list[DietarySummary, list[DietaryData]]:
+    ''' TODO: did not consider previous plan '''
+    # userinfo
+    userinfo = await get_user_info(user_id, is_formated=True)
+    # user_preference
+    user_preference = await get_user_preference_summary(user_id)
+    # glu summary
+    glu_summary = await get_glu_summary(user_id)
     try:
-        return await llm(prompt, model='qwen-vl-max', temperature=0.1)
+        pass
     except Exception as e:
         error_traceback = traceback.format_exc()
         logger.error(f"Failed to get user preferences: {str(e)}\n{error_traceback}")
@@ -118,8 +119,10 @@ def set_user_preferences(user_id: str, preferences: UserPreferenceData) -> None:
         
 def get_user_preferences(user_id: str) -> UserPreferenceData:
     try:
-        user_pref = UserPreference.get(UserPreference.id == user_id)
-        return UserPreferenceData(**user_pref.preference)
+        user_pref = UserPreference.select().where(UserPreference.userid == user_id)
+        if user_pref:
+            return UserPreferenceData(**user_pref.preference)
+        return None
     except Exception as e:
         error_traceback = traceback.format_exc()
         logger.error(f"Failed to get user preferences: {str(e)}\n{error_traceback}")
@@ -129,9 +132,20 @@ def get_user_preferences(user_id: str) -> UserPreferenceData:
         )
         
         
+async def get_user_preference_summary(user_id: str) -> str:
+    user_preference = get_user_preferences(user_id)
+    if user_preference:
+        user_preference_json = user_preference.model_dump_json()
+        query = user_preference_summary(user_preference_json)
+        resp = await llm(query)
+    else:
+        resp = 'User has no preferences'
+    return resp
+
+        
 def get_products() -> str:
     products = Product.select()
-    return "\n".join([f"{i+1}. {p.name}: {p.description}" for i, p in enumerate(products)])
+    return "\n".join([f"{i+1}. {p.name}: {p.brief}" for i, p in enumerate(products)])
         
 
 async def get_user_info(user_id: str, is_formated=False) -> str:

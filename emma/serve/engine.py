@@ -3,6 +3,7 @@ import sys
 sys.path.append(os.path.abspath('..'))
 
 import dotenv
+import datetime
 from router import RouterOptions, UserIntentionRouter
 from pydantic import BaseModel
 from agent.agent import NullAgent, AgentConfig, ChatAgent
@@ -11,7 +12,7 @@ from typing import Dict, Any, AsyncGenerator
 import uuid
 import time
 from prompt import emma_chat, emma_future, emma_fitness, emma_nutrition
-from nutrition.emma import get_user_info
+from nutrition.emma import get_user_info, get_user_preference_summary, get_glu_summary, get_products, calculate_nutrition_per_day
 from utils import extract_json_from_text
 
 
@@ -52,22 +53,35 @@ async def workflow(query: Query, config: str, websocket) -> AsyncGenerator[Dict[
     router = UserIntentionRouter(model, options, config, '我是健康助手，我可以帮助您制定饮食计划，回答关于食物和营养的问题，以及提供健康和营养相关的建议。')
     question = query.content
     choice = await router.classify(question)
+    print('choice:', choice)
     if choice.get('message'):
         print("Others")
         agent = NullAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         async for chunk in agent.act(question, choice['message']):
             yield chunk
     elif int(choice.get('choice')) == 1:
-        pass
+        print('dietary')
+        emma_dietary_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
+        context = {
+            'userinfo': await get_user_info(config['user_id'], is_formated=True),
+            'food_preference': await get_user_preference_summary(config['user_id']),
+            'glu_summary': await get_glu_summary(config['user_id']),
+            'products': get_products()
+        }
+        async for chunk in emma_dietary_agent.act(question, 0, 'default', emma_nutrition, context, stream=False):
+            response = chunk.choices[0].message.content
+            resp_json = extract_json_from_text(response)
+            chunk.choices[0].message.content = resp_json['message']
+            yield chunk
     elif int(choice.get('choice')) == 2:
         print('food & nutrition')
         emma_nutrition_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         context = {
-            'userinfo': None,
-            'food_preference': None,
-            'glu_summary': None,
-            'meal': None,
-            'products': None
+            'userinfo': await get_user_info(config['user_id'], is_formated=True),
+            'food_preference': await get_user_preference_summary(config['user_id']),
+            'glu_summary': await get_glu_summary(config['user_id']),
+            'meal': calculate_nutrition_per_day(config['user_id'], datetime.datetime.now()),
+            'products': get_products()
         }
         async for chunk in emma_nutrition_agent.act(question, 0, 'default', emma_nutrition, context, stream=False):
             response = chunk.choices[0].message.content

@@ -45,20 +45,23 @@ class UserInfoRequest(BaseModel):
 
 @router.post("/v1/emma/exercise")
 async def save_exercise_data(request: ExerciseDataRequest):
-    # get emma comment
-    emma_comment, calories = await get_exercise_summary(request.user_id, request.exercise, request.intensity, request.duration, request.bpm, request.start_time, request.remark)
+    exercise = ExerciseData.create(
+        user_id=request.user_id,
+        exercise=request.exercise,
+        duration=request.duration,
+        intensity=request.intensity,
+        bpm=request.bpm,
+        remark=request.remark,
+        start_time=request.start_time,
+        calories=0.0,  # Default value, could be calculated based on exercise type
+        updated_at=datetime.now()
+    )
     try:
-        exercise = ExerciseData.create(
-            user_id=request.user_id,
-            exercise=request.exercise,
-            duration=request.duration,
-            intensity=request.intensity,
-            bpm=request.bpm,
-            remark=request.remark,
-            start_time=request.start_time,
-            calories=calories,  # Default value, could be calculated based on exercise type
-            updated_at=datetime.now()
-        )
+        # get emma comment
+        emma_comment, calories = await get_exercise_summary(request.user_id, request.exercise, request.intensity, request.duration, request.bpm, request.start_time, request.remark)
+        exercise.calories = calories
+        exercise.emma = emma_comment.model_dump_json()
+        exercise.save()
         return {
             "status": 200,
             "summary": emma_comment.summary,
