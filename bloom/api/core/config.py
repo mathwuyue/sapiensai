@@ -37,8 +37,19 @@ class Settings(BaseSettings):
     QWEN_API_KEY: str
 
     ADMIN_TOKEN: str
+    UPLOAD_DIR: str
     
-    @computed_field
+    SQLALCHEMY_POOL_SIZE: int = 5
+    SQLALCHEMY_MAX_OVERFLOW: int = 10
+    SQLALCHEMY_POOL_TIMEOUT: int = 30  # 增加到 30 秒
+    SQLALCHEMY_POOL_RECYCLE: int = 3600  # 连接回收时间（秒）
+    SQLALCHEMY_ECHO: bool = False  # SQL log
+    
+    # Connection timeouts
+    POSTGRES_CONNECT_TIMEOUT: int = 60  # 连接超时
+    POSTGRES_COMMAND_TIMEOUT: int = 300  # 命令超时
+    
+    @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 

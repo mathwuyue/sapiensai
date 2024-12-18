@@ -6,20 +6,39 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { ArrowLeft, Upload as UploadIcon, X, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { analyzeFood } from "@/app/lib/actions/food";
+import { toast } from "@/hooks/use-toast";
 
 interface FoodItem {
-  name: string;
-  calories: number;
-  portion: string;
-  protein: number;
-  carbs: number;
-  fat: number;
+  food: string;
+  count: number;
+}
+
+interface Nutrients {
+  macro: {
+    calories: number;
+    protein: number;
+    fat: number;
+    carb: number;
+  };
+  micro: {
+    fa: number;
+    vc: number;
+    vd: number;
+  };
+  mineral: {
+    calcium: number;
+    iron: number;
+    zinc: number;
+    iodine: number;
+  };
 }
 
 interface AnalysisResult {
-  items: FoodItem[];
-  total_calories: number;
-  image_description: string;
+  foods: FoodItem[];
+  nutrients: Nutrients;
+  summary: string;
+  advice: string;
 }
 
 export default function Upload() {
@@ -51,32 +70,37 @@ export default function Upload() {
 
     setIsAnalyzing(true);
     try {
-      // 将 base64 字符串转换为文件
-      const base64Data = selectedImage.split(",")[1];
-      const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(
-        (res) => res.blob()
-      );
-      const file = new File([blob], "food.jpg", { type: "image/jpeg" });
-
-      // 创建 FormData
+      // 将 base64 字符串转换为 Blob
+      const blob = await fetch(selectedImage).then((res) => res.blob());
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", blob, "food.jpg");
 
-      // send request
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/food/analyze`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      // 调用 server action
+      const result = await analyzeFood(formData);
 
-      if (!response.ok) throw new Error("Analysis failed");
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const result = await response.json();
-      setAnalysisResult(result);
+      if (result.data) {
+        setAnalysisResult(result.data);
+        toast({
+          title: "Success",
+          description: "Analysis completed successfully",
+        });
+      }
     } catch (error) {
       console.error("Analysis error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to analyze image",
+        variant: "destructive",
+      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -141,32 +165,125 @@ export default function Upload() {
 
       {/* Analysis Results */}
       {analysisResult && (
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h3 className="font-medium mb-2">Analysis Results</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            {analysisResult.image_description}
-          </p>
+        <div className="space-y-4">
+          {/* Summary and Advice */}
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <h3 className="font-medium mb-2">Analysis Summary</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {analysisResult.summary}
+            </p>
+            <h4 className="font-medium mb-2">Recommendations</h4>
+            <p className="text-sm text-gray-600">{analysisResult.advice}</p>
+          </div>
 
-          {analysisResult.items.map((item, index) => (
-            <div key={index} className="mb-4 last:mb-0">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-medium">{item.name}</span>
-                <span>{item.calories} cal</span>
-              </div>
-              <div className="text-sm text-gray-500">
-                <span className="mr-4">Protein : {item.protein}g</span>
-                <span className="mr-4">Carbs: {item.carbs}g</span>
-                <span>Fat: {item.fat}g</span>
+          {/* Food Items */}
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <h3 className="font-medium mb-4">Food Items</h3>
+            <div className="space-y-2">
+              {analysisResult.foods.map((item, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <span className="font-medium">{item.food}</span>
+                  <span className="text-gray-600">{item.count} portions</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Nutritional Information */}
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <h3 className="font-medium mb-4">Nutritional Information</h3>
+
+            {/* Macronutrients */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-500 mb-2">
+                Macronutrients
+              </h4>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Calories</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.macro.calories} kcal
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Protein</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.macro.protein}g
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Carbs</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.macro.carb}g
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Fat</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.macro.fat}g
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
 
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Total Calories</span>
-              <span className="font-medium">
-                {analysisResult.total_calories} cal
-              </span>
+            {/* Micronutrients */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-500 mb-2">
+                Micronutrients
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Dietary Fiber</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.micro.fa}g
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Vitamin C</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.micro.vc}mg
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Vitamin D</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.micro.vd}mcg
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Minerals */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-2">
+                Minerals
+              </h4>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Calcium</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.mineral.calcium}mg
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Iron</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.mineral.iron}mg
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Zinc</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.mineral.zinc}mg
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-gray-500 text-sm">Iodine</div>
+                  <div className="font-medium">
+                    {analysisResult.nutrients.mineral.iodine}mcg
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

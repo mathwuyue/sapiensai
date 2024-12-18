@@ -8,6 +8,7 @@ from .prenatal_screening import PrenatalScreening
 from .recommendation import Recommendation
 from .glucose import Glucose
 from .profile import Profile, UserCondition, UserComplication
+from .food import FoodAnalyze
 __all__ = [
     "User",
     "Patient",
@@ -20,5 +21,6 @@ __all__ = [
     "Recommendation",
     "Profile",
     "UserCondition",
-    "UserComplication"
+    "UserComplication",
+    "FoodAnalyze"
 ] 

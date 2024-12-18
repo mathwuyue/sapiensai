@@ -1,18 +1,49 @@
-from typing import Generator, Optional
+from typing import Generator, Optional, AsyncGenerator
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.pool import NullPool
+from sqlalchemy import text
+from contextlib import asynccontextmanager
 
 from api.core.config import settings
 from api.core.security import ALGORITHM
-from api.db.session import get_db
+from api.db.session import async_session
 from api import crud, models, schemas
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
+
+# 修改数据库引擎配置
+engine = create_async_engine(
+    settings.SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True,
+    poolclass=NullPool,
+    # asyncpg 特定的连接参数
+    connect_args={
+        "timeout": 60,  # 连接超时（秒）
+    }
+)
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """
+    依赖函数：获取数据库会话
+    增加了超时设置和错误处理
+    """
+    session = AsyncSession(
+        engine,
+        expire_on_commit=False,
+    )
+    try:
+        # 设置会话级别的超时
+        await session.execute(text("SET statement_timeout = '30000'"))  # 30 秒
+        await session.execute(text("SET idle_in_transaction_session_timeout = '60000'"))  # 60 秒
+        yield session
+    finally:
+        await session.close()
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db),

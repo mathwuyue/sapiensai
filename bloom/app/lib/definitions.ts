@@ -138,3 +138,46 @@ export const INTENSITY_TYPES = [
   'normal',
   'high'
 ] as const;
+
+// 食物分析相关定义
+export interface FoodItem {
+  food: string;
+  count: number;
+}
+
+export interface Nutrients {
+  macro: {
+    calories: number;
+    protein: number;
+    fat: number;
+    carb: number;
+  };
+  micro: {
+    fa: number;  // 膳食纤维
+    vc: number;  // 维生素C
+    vd: number;  // 维生素D
+  };
+  mineral: {
+    calcium: number;  // 钙
+    iron: number;    // 铁
+    zinc: number;    // 锌
+    iodine: number;  // 碘
+  };
+}
+
+export interface FoodAnalysis {
+  user_id: number;
+  file_path: string;
+  original_filename: string;
+  foods: FoodItem[];
+  nutrients: Nutrients;
+  summary: string;
+  advice: string;
+  created_at: string;
+}
+
+export interface ExerciseWithCalories extends Exercise {
+  calories: number;
+  summary?: string;
+  advice?: string;
+}
