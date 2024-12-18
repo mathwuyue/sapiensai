@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createExerciseRecord, updateExerciseRecord } from "@/app/lib/actions/exercise";
+import { createExerciseRecord} from "@/app/lib/actions/exercise";
 import { PlusCircle, Trash2 } from "lucide-react";
 import internal from "stream";
 import { Exercise, ExerciseType, ExerciseIntensity, EXERCISE_TYPES, INTENSITY_TYPES } from "@/app/lib/definitions";
@@ -117,13 +117,13 @@ export function CreateExerciseModal({ isOpen, onClose }: CreateExerciseModalProp
             remark: entry.remark
           });
         const response = await createExerciseRecord({}, form);
-        console.log('API 响应:', response);
-        if (response && response.data && response.data.id) {  // 确保 id 存在
-          await updateExerciseRecord(response.data.id,
-            response.data.summary,
-            response.data.advice
-          );
-        }
+        console.log('createExerciseRecord response:', response);
+        // if (response && response.data && response.data.id) {  // 确保 id 存在
+        //   await updateExerciseRecord(response.data.id,
+        //     response.data.summary,
+        //     response.data.advice
+        //   );
+        // }
 
       if (!response) {
         toast({
@@ -231,7 +231,8 @@ export function CreateExerciseModal({ isOpen, onClose }: CreateExerciseModalProp
 //   };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[90%] max-w-[400px] md:w-full p-4 md:p-6" 
+        aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle>Add Exercise Record</DialogTitle>
         </DialogHeader>

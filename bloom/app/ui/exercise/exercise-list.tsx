@@ -82,7 +82,8 @@ export function ExerciseList() {
           <Bar 
             dataKey="calories" 
             fill="#2563eb"
-            radius={4}
+            radius={[4, 4, 0, 0]}
+            maxBarSize={40}
           />
         </BarChart>
       </ResponsiveContainer>
