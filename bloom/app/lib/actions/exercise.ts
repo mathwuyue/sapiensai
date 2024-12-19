@@ -157,7 +157,7 @@ export async function deleteExerciseRecord(id: number) {
     revalidatePath('/dashboard/exercise');
     return response.json();
   } catch (error) {
-    console.error('删除失败:', error);
+    console.error('Delete failed:', error);
     throw error;
   }
 }
@@ -219,7 +219,6 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
   // }
   
   try {
-    console.log('Fetching URL:', url); // 添加日志
     
     const response = await fetch(`${URL}/exercise`, {
       method: 'GET',
@@ -229,16 +228,16 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
       }
     });
     
-    console.log('Response status:', response.status); // 添加日志
+    console.log('Response status:', response.status); 
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API Error:', errorText); // 添加错误日志
+      console.error('API Error:', errorText); 
       throw new Error(`Failed to fetch exercises: ${response.status} ${errorText}`);
     }
     
     const data = await response.json();
-    console.log('Response data:', data); // 添加日志
+    console.log('Response data:', data); 
     return data.map((record: any) => {
       let emmaData = { summary: null, advice: null };
       if (record.emma) {

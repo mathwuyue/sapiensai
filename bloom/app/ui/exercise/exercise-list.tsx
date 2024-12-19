@@ -1,3 +1,5 @@
+"use client";
+
 import { fetchExerciseRecords, deleteExerciseRecord } from "@/app/lib/actions/exercise";
 import { useEffect, useState, useMemo } from "react";
 import { Exercise, ExerciseType, ExerciseIntensity, ExerciseWithCalories } from "@/app/lib/definitions";
@@ -21,11 +23,8 @@ const chartConfig = {
 export function ExerciseList() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+
   const [page, setPage] = useState(1);
-  const [isExpanded, setIsExpanded] = useState(false);
-  // const [records, setRecords] = useState([]);
-  // 使用 Map 或对象来存储每个记录的展开状态
   const [expandedStates, setExpandedStates] = useState<Record<number, boolean>>({});
 
   const itemsPerPage = 3;
@@ -79,7 +78,6 @@ export function ExerciseList() {
       return acc;
     }, {} as Record<string, Exercise[]>);
 
-    // 每组内按时间正序
     Object.keys(groups).forEach(date => {
       groups[date].sort((a, b) => 
         new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
@@ -95,7 +93,6 @@ export function ExerciseList() {
     ), [groupedRecords]
   );
 
-  // 分页
   const paginatedDates = sortedDates.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage
@@ -135,52 +132,7 @@ export function ExerciseList() {
         </BarChart>
       </ResponsiveContainer>
     </div>
-      {/* {records.map((record: any) => (
-        <div key={record.id} className="p-4 border rounded-lg">
-          <div className="flex justify-between items-start">
-          <button
-          onClick={() => handleDelete(record.id)}
-          className="text-red-600 hover:text-red-800"
-          >
-          Delete
-          </button>
-            <div>
-              <h3 className="font-medium">{record.exercise}</h3>
-              <p className="text-sm text-gray-500">
-                {new Date(record.start_time).toLocaleString()}
-              </p>
-            </div>
-            <div className="text-right">
-              <p>Length: {record.duration} minutes</p>
-              <p>Intensity: {record.intensity}</p>
-            </div>
-          </div>
-          {record.bpm && (
-            <p className="mt-2 text-sm">Heart Rate: {record.bpm}</p>
-          )}
-          {
-            record.calories && (
-              <p className="mt-2 text-sm">Calories: {Math.round(record.calories)}</p>
-            )
-          }
-          {record.remark && (
-            <p className="mt-2 text-sm text-gray-600">{record.remark}</p>
-          )}
-         
-          {(record.summary || record.advice) && (
-        <div className="mt-3 p-3 bg-gray-50 rounded">
-        {record.summary && (
-          <p className="text-sm">Summary: {record.summary}</p>
-        )}
-        {record.advice && (
-            <p className="mt-2 text-sm text-blue-600">
-            Advice: {record.advice}
-          </p>
-        )}
-      </div>
-    )}
-        </div>
-      ))} */}
+      
       
       {paginatedDates.map(date => (
         <div key={date} className="space-y-2">
@@ -190,7 +142,6 @@ export function ExerciseList() {
           <div className="space-y-2">
             {groupedRecords[date].map((record:any) => (
               <div key={record.id} className="p-4 border rounded-lg relative">
-                {/* 删除按钮 */}
                 <button
                   onClick={() => handleDelete(record.id)}
                   className="absolute top-4 right-4 text-red-500 hover:text-red-700"
@@ -215,7 +166,7 @@ export function ExerciseList() {
             <p className="mt-2 text-sm">Heart Rate: {record.bpm}</p>
           )}
           {record.remark && (
-            <p className="mt-2 text-sm text-gray-600">{record.remark}</p>
+            <p className="mt-2 text-sm text-gray-600">Remark: {record.remark}</p>
           )}
                     </div>
                         {/* <button
@@ -234,6 +185,11 @@ export function ExerciseList() {
                   className="mt-2 text-sm text-blue-600 hover:text-blue-800"
                 >
                   {expandedStates[record.id] ? "Show less" : "Show more"}
+                  {expandedStates[record.id] ? (
+                     <ChevronUp className="h-4 w-4" />
+                      ) : (
+                    <ChevronDown className="h-4 w-4" />
+                          )}
                 </button>
                 </div>
 
