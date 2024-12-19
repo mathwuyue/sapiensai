@@ -88,7 +88,6 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
         message: "Failed to create glucose readings"
           };
     }
-    revalidatePath('/dashboard/exercise');
     return { 
       message: "Success",
       data:data,
@@ -188,7 +187,7 @@ export async function deleteExerciseRecord(id: number) {
 // }
 
 export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
-  let url = `${URL}/exercise`;
+  const url = `${URL}/exercise`;
   //let url = `${LOCAL_API_URL}/v1/emma/exercise`; // 移除 /api 前缀
 
   const session = await auth();
@@ -222,7 +221,7 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
   try {
     console.log('Fetching URL:', url); // 添加日志
     
-    const response = await fetch(url, {
+    const response = await fetch(`${URL}/exercise`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

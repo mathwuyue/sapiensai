@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { CreateExerciseModal } from "@/app/dashboard/exercise/create-exercise-modal";
-import { ExerciseChart } from "@/app/ui/exercise/exercise-chart";
 
 export default function ExercisePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,7 +28,6 @@ export default function ExercisePage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-      {/* <ExerciseChart /> */}
       <ExerciseList />
     </div>
   );
