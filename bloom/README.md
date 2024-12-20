@@ -1,22 +1,29 @@
-This is the frontend and backend for the Bloom app.
+## For Frontend and Backend application
 
-## Getting Started
+### Getting Started
 
-First, setup venv:
+Setup venv:
 
 ```bash
 python -m venv venv
 source venv/bin/activate
 ```
 
-Second, install dependencies:
+Install dependencies:
 
 ```bash
+cd bloom
 pip install -r requirements.txt
 pnpm install
 ```
 
-Third, run the development server:
+Setup database:
+
+```bash
+alembic upgrade head
+```
+
+Run the development server:
 
 ```bash
 pnpm dev
