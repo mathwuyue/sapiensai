@@ -9,8 +9,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useTranslations } from "next-intl";
 
 export default function LoginForm() {
+  const t = useTranslations("common");
   const { toast } = useToast();
   const [errorMessage, formAction, isPending] = useActionState(
     authenticate,
@@ -32,37 +34,37 @@ export default function LoginForm() {
         <Link href="/">
           <ArrowLeft className="h-6 w-6" />
         </Link>
-        <h1 className="text-2xl">Log In</h1>
+        <h1 className="text-2xl">{t("login")}</h1>
       </div>
 
       <form action={formAction} className="space-y-4">
         <div className="w-full">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <div className="relative">
             <Input
               type="email"
               name="email"
               id="email"
-              placeholder="Email"
+              placeholder={t("email")}
               required
             />
           </div>
         </div>
         <div className="relative">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <div className="relative">
             <Input
               type="password"
               name="password"
               id="password"
-              placeholder="Password"
+              placeholder={t("password")}
               required
               minLength={6}
             />
           </div>
         </div>
         <Button className="w-full text-white" disabled={isPending}>
-          {isPending ? "Logging in..." : "Log in"}
+          {isPending ? t("logging_in") : t("login")}
         </Button>
       </form>
     </div>

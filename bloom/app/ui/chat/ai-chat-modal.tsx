@@ -10,6 +10,7 @@ import {
   getAuthInfo,
   getChatHistory,
 } from "@/app/lib/actions/chat";
+import { useTranslation, useTranslations } from "next-intl";
 
 interface AIChatModalProps {
   isOpen: boolean;
@@ -68,6 +69,7 @@ interface HistoryResponse {
 }
 
 export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
+  const t = useTranslations("chat");
   const [authInfo, setAuthInfo] = useState<{
     accessToken: string;
     userId: string;
@@ -401,7 +403,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
     >
       <div className="bg-white w-full max-w-2xl h-[600px] rounded-lg flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Chat with AI</h2>
+          <h2 className="text-lg font-semibold">{t("chat_with_ai")}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"

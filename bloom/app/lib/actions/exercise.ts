@@ -52,9 +52,6 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
   try {
     const session = await auth();
     if (!session?.user) throw new Error("Unauthorized");
-    // console.log("Session:", session);
-    // console.log("Access Token:", session?.accessToken);
-    console.log("API URL:", `${BASE_URL}/v1/emma/exercise`);
 
     const response = await fetch(`${BASE_URL}/v1/emma/exercise`, {
       method: 'POST',
@@ -72,7 +69,6 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
     });
 
     if (!response.ok) {
-        console.log("response", response);
       return {
         message: "Failed to create glucose readings"
           };
@@ -83,7 +79,6 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
     
 
     if (!response.ok) {
-        console.log("response", response);
       return {
         message: "Failed to create glucose readings"
           };
@@ -228,7 +223,6 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
       }
     });
     
-    console.log('Response status:', response.status); 
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -237,7 +231,6 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
     }
     
     const data = await response.json();
-    console.log('Response data:', data); 
     return data.map((record: any) => {
       let emmaData = { summary: null, advice: null };
       if (record.emma) {

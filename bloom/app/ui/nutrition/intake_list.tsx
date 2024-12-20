@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInView } from "react-intersection-observer";
+import { useTranslations } from "next-intl";
 
 export default function IntakeList() {
+  const t = useTranslations("nutrition");
   const [analyses, setAnalyses] = useState<FoodAnalysis[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -73,7 +75,7 @@ export default function IntakeList() {
   return (
     <ScrollArea className="h-[calc(100vh-180px)] px-4">
       <div className="py-6">
-        <h1 className="text-2xl font-bold mb-6">Intake List</h1>
+        <h1 className="text-2xl font-bold mb-6">{t("intake_list")}</h1>
 
         <div className="space-y-4">
           {analyses.map((analysis, index) => (
@@ -87,20 +89,21 @@ export default function IntakeList() {
                     {new Date(analysis.created_at).toLocaleDateString()}
                   </h3>
                   <span className="text-sm text-muted-foreground">
-                    {analysis.nutrients.macro.calories.toFixed(0)} calories
+                    {analysis.nutrients.macro.calories.toFixed(0)}{" "}
+                    {t("calories")}
                   </span>
                 </div>
               </CardHeader>
               <CardContent className="pt-4">
                 {/* 食物列表 */}
                 <div className="mb-4">
-                  <h4 className="font-medium mb-2">Food List</h4>
+                  <h4 className="font-medium mb-2">{t("food_list")}</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {analysis.foods.map((food, idx) => (
                       <div key={idx} className="flex justify-between text-sm">
                         <span>{food.food}</span>
                         <span className="text-muted-foreground">
-                          {food.count} portions
+                          {food.count} {t("portions")}
                         </span>
                       </div>
                     ))}
@@ -111,24 +114,24 @@ export default function IntakeList() {
                 <div className="space-y-2">
                   <div className="grid grid-cols-4 gap-2 text-center">
                     <NutrientItem
-                      label="Protein"
+                      label={t("protein")}
                       value={analysis.nutrients.macro.protein}
-                      unit="g"
+                      unit={t("grams")}
                     />
                     <NutrientItem
-                      label="Fat"
+                      label={t("fat")}
                       value={analysis.nutrients.macro.fat}
-                      unit="g"
+                      unit={t("grams")}
                     />
                     <NutrientItem
-                      label="Carbohydrate"
+                      label={t("carbohydrate")}
                       value={analysis.nutrients.macro.carb}
-                      unit="g"
+                      unit={t("grams")}
                     />
                     <NutrientItem
-                      label="Fiber"
+                      label={t("fiber")}
                       value={analysis.nutrients.micro.fa}
-                      unit="g"
+                      unit={t("grams")}
                     />
                   </div>
                 </div>

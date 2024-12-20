@@ -8,6 +8,7 @@ import { ArrowLeft, Upload as UploadIcon, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { analyzeFood } from "@/app/lib/actions/food";
 import { toast } from "@/hooks/use-toast";
+import { useTranslations } from "next-intl";
 
 interface FoodItem {
   food: string;
@@ -42,6 +43,7 @@ interface AnalysisResult {
 }
 
 export default function Upload() {
+  const t = useTranslations("nutrition");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
@@ -115,7 +117,7 @@ export default function Upload() {
             <ArrowLeft className="h-6 w-6" />
           </Button>
         </Link>
-        <h1 className="text-2xl font-semibold">Upload a Photo</h1>
+        <h1 className="text-2xl font-semibold">{t("upload_a_photo")}</h1>
       </div>
 
       {/* Upload Area */}
@@ -156,8 +158,8 @@ export default function Upload() {
               <UploadIcon className="h-8 w-8 text-[#9EDA82]" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-medium">No photo uploaded yet.</p>
-              <p className="text-sm">Tap here to add one!</p>
+              <p className="text-lg font-medium">{t("no_photo_uploaded")}</p>
+              <p className="text-sm">{t("tab_here_to_upload_photo")}</p>
             </div>
           </div>
         )}
@@ -168,22 +170,24 @@ export default function Upload() {
         <div className="space-y-4">
           {/* Summary and Advice */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h3 className="font-medium mb-2">Analysis Summary</h3>
+            <h3 className="font-medium mb-2">{t("analysis_summary")}</h3>
             <p className="text-sm text-gray-600 mb-4">
               {analysisResult.summary}
             </p>
-            <h4 className="font-medium mb-2">Recommendations</h4>
+            <h4 className="font-medium mb-2">{t("recommendations")}</h4>
             <p className="text-sm text-gray-600">{analysisResult.advice}</p>
           </div>
 
           {/* Food Items */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h3 className="font-medium mb-4">Food Items</h3>
+            <h3 className="font-medium mb-4">{t("food_items")}</h3>
             <div className="space-y-2">
               {analysisResult.foods.map((item, index) => (
                 <div key={index} className="flex justify-between items-center">
                   <span className="font-medium">{item.food}</span>
-                  <span className="text-gray-600">{item.count} portions</span>
+                  <span className="text-gray-600">
+                    {item.count} {t("portions")}
+                  </span>
                 </div>
               ))}
             </div>
@@ -191,7 +195,7 @@ export default function Upload() {
 
           {/* Nutritional Information */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h3 className="font-medium mb-4">Nutritional Information</h3>
+            <h3 className="font-medium mb-4">{t("nutritional_information")}</h3>
 
             {/* Macronutrients */}
             <div className="mb-6">
@@ -200,27 +204,29 @@ export default function Upload() {
               </h4>
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Calories</div>
+                  <div className="text-gray-500 text-sm">{t("calories")}</div>
                   <div className="font-medium">
-                    {analysisResult.nutrients.macro.calories} kcal
+                    {analysisResult.nutrients.macro.calories} {t("calories")}
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Protein</div>
+                  <div className="text-gray-500 text-sm">{t("protein")}</div>
                   <div className="font-medium">
-                    {analysisResult.nutrients.macro.protein}g
+                    {analysisResult.nutrients.macro.protein} {t("grams")}
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Carbs</div>
+                  <div className="text-gray-500 text-sm">
+                    {t("carbohydrate")}
+                  </div>
                   <div className="font-medium">
-                    {analysisResult.nutrients.macro.carb}g
+                    {analysisResult.nutrients.macro.carb} {t("grams")}
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Fat</div>
+                  <div className="text-gray-500 text-sm">{t("fat")}</div>
                   <div className="font-medium">
-                    {analysisResult.nutrients.macro.fat}g
+                    {analysisResult.nutrients.macro.fat} {t("grams")}
                   </div>
                 </div>
               </div>
@@ -233,19 +239,21 @@ export default function Upload() {
               </h4>
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Dietary Fiber</div>
+                  <div className="text-gray-500 text-sm">
+                    {t("dietary_fiber")}
+                  </div>
                   <div className="font-medium">
                     {analysisResult.nutrients.micro.fa}g
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Vitamin C</div>
+                  <div className="text-gray-500 text-sm">{t("vitamin_c")}</div>
                   <div className="font-medium">
                     {analysisResult.nutrients.micro.vc}mg
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Vitamin D</div>
+                  <div className="text-gray-500 text-sm">{t("vitamin_d")}</div>
                   <div className="font-medium">
                     {analysisResult.nutrients.micro.vd}mcg
                   </div>
@@ -260,25 +268,25 @@ export default function Upload() {
               </h4>
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Calcium</div>
+                  <div className="text-gray-500 text-sm">{t("calcium")}</div>
                   <div className="font-medium">
                     {analysisResult.nutrients.mineral.calcium}mg
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Iron</div>
+                  <div className="text-gray-500 text-sm">{t("iron")}</div>
                   <div className="font-medium">
                     {analysisResult.nutrients.mineral.iron}mg
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Zinc</div>
+                  <div className="text-gray-500 text-sm">{t("zinc")}</div>
                   <div className="font-medium">
                     {analysisResult.nutrients.mineral.zinc}mg
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded">
-                  <div className="text-gray-500 text-sm">Iodine</div>
+                  <div className="text-gray-500 text-sm">{t("iodine")}</div>
                   <div className="font-medium">
                     {analysisResult.nutrients.mineral.iodine}mcg
                   </div>
@@ -298,10 +306,10 @@ export default function Upload() {
         {isAnalyzing ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Analyzing...
+            {t("analyzing")}...
           </>
         ) : (
-          "Analyze Photo"
+          t("analyze_photo")
         )}
       </Button>
 

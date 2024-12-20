@@ -17,11 +17,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fetchGlucoseReadings, deleteGlucoseReading, updateGlucoseReading } from "@/app/lib/actions/glucose";
+import {
+  fetchGlucoseReadings,
+  deleteGlucoseReading,
+  updateGlucoseReading,
+} from "@/app/lib/actions/glucose";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Edit, Trash } from "lucide-react";
 import { EditGlucoseModal } from "@/app/dashboard/glucose/edit-glucose-modal";
+import { useTranslations } from "next-intl";
 interface FormattedGlucose {
   id: string;
   value: number;
@@ -30,22 +35,36 @@ interface FormattedGlucose {
 }
 
 export const GLUCOSE_TYPES: { [key: number]: string } = {
-    1: "Before Breakfast",
-    2: "2h After Breakfast",
-    3: "Before Lunch",
-    4: "2h After Lunch",
-    5: "Before Dinner",
-    6: "2h After Dinner",
-    7: "Before Bed",
-    8: "Midnight"
-  };
-
+  1: "Before Breakfast",
+  2: "2h After Breakfast",
+  3: "Before Lunch",
+  4: "2h After Lunch",
+  5: "Before Dinner",
+  6: "2h After Dinner",
+  7: "Before Bed",
+  8: "Midnight",
+};
 
 export default function GlucoseList() {
-  const [glucoseData, setGlucoseData] = useState<FormattedGlucose[] | null>(null);
+  const t = useTranslations("glucose");
+  const GLUCOSE_TYPES = {
+    1: t("before_breakfast"),
+    2: t("2h_after_breakfast"),
+    3: t("before_lunch"),
+    4: t("2h_after_lunch"),
+    5: t("before_dinner"),
+    6: t("2h_after_dinner"),
+    7: t("before_bed"),
+    8: t("midnight"),
+  };
+  const [glucoseData, setGlucoseData] = useState<FormattedGlucose[] | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editingGlucose, setEditingGlucose] = useState<FormattedGlucose | null>(null);
+  const [editingGlucose, setEditingGlucose] = useState<FormattedGlucose | null>(
+    null
+  );
   const [isUpdating, setIsUpdating] = useState(false);
   // const [page, setPage] = useState(1);
 
@@ -54,7 +73,7 @@ export default function GlucoseList() {
   useEffect(() => {
     // if (dataFetchedRef.current) return;
     // dataFetchedRef.current = true;
-    
+
     async function loadGlucoseData() {
       try {
         const data = await fetchGlucoseReadings();
@@ -66,43 +85,34 @@ export default function GlucoseList() {
         const formattedData = data.map((reading) => ({
           id: reading.id,
           value: Number(reading.glucose_value),
-          date: new Date(reading.glucose_date).toISOString().split('T')[0], 
-          type: Number(reading.measurement_type)
+          date: new Date(reading.glucose_date).toISOString().split("T")[0],
+          type: Number(reading.measurement_type),
         }));
 
         // 按日期和类型排序
         const sortedData = formattedData.sort((a, b) => {
-            // 首先按日期排序
-            const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
-            if (dateCompare === 0) {
-              return Number(a.type) - Number(b.type);
-            }
-            return dateCompare;
-          });
-  
-        setGlucoseData(sortedData);
+          // 首先按日期排序
+          const dateCompare =
+            new Date(b.date).getTime() - new Date(a.date).getTime();
+          if (dateCompare === 0) {
+            return Number(a.type) - Number(b.type);
+          }
+          return dateCompare;
+        });
 
+        setGlucoseData(sortedData);
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error("Error loading data:", error);
         setGlucoseData([]);
       } finally {
         setIsLoading(false);
       }
     }
 
-    
-
     loadGlucoseData();
-
-
-    
   }, []);
-  
 
-
-
-
-const deleteGlucoseData = (id: string) => {
+  const deleteGlucoseData = (id: string) => {
     setDeleteId(id);
   };
 
@@ -111,57 +121,62 @@ const deleteGlucoseData = (id: string) => {
       if (!deleteId) return;
       try {
         await deleteGlucoseReading(deleteId);
-        setGlucoseData((prevData) => 
-          prevData ? prevData.filter(reading => reading.id !== deleteId) : null
+        setGlucoseData((prevData) =>
+          prevData
+            ? prevData.filter((reading) => reading.id !== deleteId)
+            : null
         );
       } catch (error) {
-        console.error('Fail to delete:', error);
+        console.error("Fail to delete:", error);
       }
       setDeleteId(null);
     }
 
     handleDelete();
   }, [deleteId]);
-//   useEffect(() => {
-//     async function updateGlucose() {
-//       if (!editingGlucose || !editData) return;
-      
-//       try {
-//         await updateGlucoseReading(editingGlucose.id, editData);
-//         setGlucoseData((prevData) => 
-//           prevData?.map(reading => 
-//             reading.id === editingGlucose.id 
-//               ? { ...reading, ...editData }
-//               : reading
-//           ) ?? null
-//         );
-//         setEditingGlucose(null);
-//       } catch (error) {
-//         console.error('更新失败:', error);
-//       }
-//     }
+  //   useEffect(() => {
+  //     async function updateGlucose() {
+  //       if (!editingGlucose || !editData) return;
 
-//     updateGlucose();
-//   }, [editData, editingGlucose]);
-const handleEdit = async (data: { value: number; type: number; date: string }) => {
+  //       try {
+  //         await updateGlucoseReading(editingGlucose.id, editData);
+  //         setGlucoseData((prevData) =>
+  //           prevData?.map(reading =>
+  //             reading.id === editingGlucose.id
+  //               ? { ...reading, ...editData }
+  //               : reading
+  //           ) ?? null
+  //         );
+  //         setEditingGlucose(null);
+  //       } catch (error) {
+  //         console.error('更新失败:', error);
+  //       }
+  //     }
+
+  //     updateGlucose();
+  //   }, [editData, editingGlucose]);
+  const handleEdit = async (data: {
+    value: number;
+    type: number;
+    date: string;
+  }) => {
     if (!editingGlucose || isUpdating) return;
-    
+
     try {
       setIsUpdating(true);
       await updateGlucoseReading(editingGlucose.id, data);
-      
+
       // 本地状态更新
-      setGlucoseData((prevData) => 
-        prevData?.map(reading => 
-          reading.id === editingGlucose.id 
-            ? { ...reading, ...data }
-            : reading
-        ) ?? null
+      setGlucoseData(
+        (prevData) =>
+          prevData?.map((reading) =>
+            reading.id === editingGlucose.id ? { ...reading, ...data } : reading
+          ) ?? null
       );
-      
+
       setEditingGlucose(null);
     } catch (error) {
-      console.error('Update failed:', error);
+      console.error("Update failed:", error);
     } finally {
       setIsUpdating(false);
     }
@@ -176,32 +191,31 @@ const handleEdit = async (data: { value: number; type: number; date: string }) =
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Glucose History</CardTitle>
+          <CardTitle>{t("glucose_history")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div>Loading...</div>
+          <div>{t("loading")}</div>
         </CardContent>
       </Card>
     );
   }
 
-  
-  
-  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Glucose History</CardTitle>
-        <CardDescription>Your blood glucose readings history</CardDescription>
+        <CardTitle>{t("glucose_history")}</CardTitle>
+        <CardDescription>
+          {t("your_blood_glucose_readings_history")}
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-1">
         <Table className="w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Value (mmol/L)</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("measurement_type")}</TableHead>
+              <TableHead>{t("value")}</TableHead>
+              <TableHead className="text-right">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -210,25 +224,27 @@ const handleEdit = async (data: { value: number; type: number; date: string }) =
                 <TableCell>
                   {new Date(reading.date).toLocaleDateString()}
                 </TableCell>
-                
-                <TableCell>
-                  {GLUCOSE_TYPES[reading.type]}
-                </TableCell>
+
+                <TableCell>{GLUCOSE_TYPES[reading.type]}</TableCell>
                 <TableCell>{reading.value}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => {setEditingGlucose(reading);}}
+                      onClick={() => {
+                        setEditingGlucose(reading);
+                      }}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <br />
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       size="sm"
-                      onClick={() => {deleteGlucoseData(reading.id)}}
+                      onClick={() => {
+                        deleteGlucoseData(reading.id);
+                      }}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>
@@ -247,26 +263,21 @@ const handleEdit = async (data: { value: number; type: number; date: string }) =
         </Table>
       </CardContent>
       {editingGlucose && (
-                      <EditGlucoseModal
-                      isOpen={!!editingGlucose}
-                      onClose={() => !isUpdating && setEditingGlucose(null)}
-                      onSave={handleEdit}
-                      initialData={editingGlucose}
-                      isLoading={isUpdating}
+        <EditGlucoseModal
+          isOpen={!!editingGlucose}
+          onClose={() => !isUpdating && setEditingGlucose(null)}
+          onSave={handleEdit}
+          initialData={editingGlucose}
+          isLoading={isUpdating}
         />
-                    )}
+      )}
       <CardFooter>
-      <Link className="w-full" href="/dashboard/glucose/create">
-          <Button className="w-full">Add Glucose Reading</Button>
+        <Link className="w-full" href="/dashboard/glucose/create">
+          <Button className="w-full">{t("add_glucose_reading")}</Button>
         </Link>
-        <div className="flex items-center justify-between border-t pt-4">
-        
+        <div className="flex items-center justify-between border-t pt-4"></div>
 
-
-    </div>
-    
-
-    {/* <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"

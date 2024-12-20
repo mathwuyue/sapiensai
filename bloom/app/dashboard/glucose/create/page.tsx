@@ -14,17 +14,7 @@ import { PlusCircle, Trash2 } from "lucide-react";
 import { createGlucoseReadings, State } from "@/app/lib/actions/glucose";
 import { useActionState } from "react";
 import { formatLocalDate } from "@/app/lib/utils";
-
-const GLUCOSE_TYPES = [
-  { value: 1, label: "Before Breakfast" },
-  { value: 2, label: "2h After Breakfast" },
-  { value: 3, label: "Before Lunch" },
-  { value: 4, label: "2h After Lunch" },
-  { value: 5, label: "Before Dinner" },
-  { value: 6, label: "2h After Dinner" },
-  { value: 7, label: "Before Bed (10:00-11:00pm)" },
-  { value: 8, label: "Midnight (2:00am)" },
-];
+import { useTranslations } from "next-intl";
 
 interface GlucoseEntry {
   type: number;
@@ -33,6 +23,17 @@ interface GlucoseEntry {
 }
 
 export default function GlucoseCreatePage() {
+  const t = useTranslations("glucose");
+  const GLUCOSE_TYPES = [
+    { value: 1, label: t("before_breakfast") },
+    { value: 2, label: t("2h_after_breakfast") },
+    { value: 3, label: t("before_lunch") },
+    { value: 4, label: t("2h_after_lunch") },
+    { value: 5, label: t("before_dinner") },
+    { value: 6, label: t("2h_after_dinner") },
+    { value: 7, label: t("before_bed") },
+    { value: 8, label: t("midnight") },
+  ];
   const initialState: State = { message: "", errors: {} };
   const [state, formAction] = useActionState(
     createGlucoseReadings,
@@ -94,7 +95,9 @@ export default function GlucoseCreatePage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Add New Glucose Reading</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        {t("add_new_glucose_reading")}
+      </h1>
 
       <form action={wrappedFormAction}>
         {entries.map((entry, index) => (
@@ -119,7 +122,7 @@ export default function GlucoseCreatePage() {
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a type" />
+                    <SelectValue placeholder={t("select_a_type")} />
                   </SelectTrigger>
                   <SelectContent>
                     {GLUCOSE_TYPES.map((type) => (
@@ -142,7 +145,7 @@ export default function GlucoseCreatePage() {
                     type="number"
                     step="0.1"
                     name="value"
-                    placeholder="Glucose Value"
+                    placeholder={t("glucose_value")}
                     value={entry.value}
                     required
                     onChange={(e) =>
@@ -177,11 +180,11 @@ export default function GlucoseCreatePage() {
             className="flex items-center gap-2"
           >
             <PlusCircle className="h-5 w-5" />
-            Add Another Reading
+            {t("add_another_reading")}
           </Button>
 
           <Button type="submit" className="ml-auto">
-            Save Readings
+            {t("save_readings")}
           </Button>
         </div>
       </form>

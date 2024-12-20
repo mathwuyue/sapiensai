@@ -23,6 +23,7 @@ import {
 } from "@/app/lib/definitions";
 import { createProfile, getProfile, State } from "@/app/lib/actions/profile";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 interface SelectedCondition {
   id: string;
@@ -30,6 +31,7 @@ interface SelectedCondition {
 }
 
 export default function ProfileForm() {
+  const t = useTranslations("profile");
   const [complications, setComplications] = useState<PresetComplication[]>([]);
   const [conditions, setConditions] = useState<PresetCondition[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<
@@ -108,23 +110,25 @@ export default function ProfileForm() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Create Your Profile</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("create_your_profile")}</h1>
 
       <form action={formAction}>
         {/* Basic Information */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {t("basic_information")}
+          </h2>
           <div className="space-y-4">
             <div className="p-4 border rounded-lg bg-white">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Age (years)
+                {t("age")} (years)
               </label>
               <Input
                 type="number"
                 name="age"
                 value={formData.age}
                 onChange={(e) => handleInputChange("age", e.target.value)}
-                placeholder="Enter your age"
+                placeholder={t("enter_your_age")}
                 required
               />
             </div>
@@ -132,7 +136,7 @@ export default function ProfileForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg bg-white">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Pre-pregnancy Weight (kg)
+                  {t("pre_pregnancy_weight")} (kg)
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -143,7 +147,7 @@ export default function ProfileForm() {
                     onChange={(e) =>
                       handleInputChange("pre_weight", e.target.value)
                     }
-                    placeholder="Enter weight"
+                    placeholder={t("enter_your_weight")}
                     required
                   />
                   <span className="text-sm text-gray-500">kg</span>
@@ -152,7 +156,7 @@ export default function ProfileForm() {
 
               <div className="p-4 border rounded-lg bg-white">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Weight (kg)
+                  {t("current_weight")} (kg)
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -163,7 +167,7 @@ export default function ProfileForm() {
                     onChange={(e) =>
                       handleInputChange("cur_weight", e.target.value)
                     }
-                    placeholder="Enter weight"
+                    placeholder={t("enter_your_weight")}
                     required
                   />
                   <span className="text-sm text-gray-500">kg</span>
@@ -173,7 +177,7 @@ export default function ProfileForm() {
 
             <div className="p-4 border rounded-lg bg-white">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Height (cm)
+                {t("height")} (cm)
               </label>
               <div className="flex items-center gap-2">
                 <Input
@@ -182,7 +186,7 @@ export default function ProfileForm() {
                   name="height"
                   value={formData.height}
                   onChange={(e) => handleInputChange("height", e.target.value)}
-                  placeholder="Enter height"
+                  placeholder={t("enter_your_height")}
                   required
                 />
                 <span className="text-sm text-gray-500">cm</span>
@@ -193,12 +197,14 @@ export default function ProfileForm() {
 
         {/* Medical Information */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Medical Information</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {t("medical_information")}
+          </h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg bg-white">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fasting Glucose
+                  {t("fasting_glucose")}
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -209,7 +215,7 @@ export default function ProfileForm() {
                     onChange={(e) =>
                       handleInputChange("glucose", e.target.value)
                     }
-                    placeholder="Enter glucose"
+                    placeholder={t("enter_your_glucose")}
                     required
                   />
                   <span className="text-sm text-gray-500">mmol/L</span>
@@ -227,7 +233,7 @@ export default function ProfileForm() {
                     name="hba1c"
                     value={formData.hba1c}
                     onChange={(e) => handleInputChange("hba1c", e.target.value)}
-                    placeholder="Enter hba1c"
+                    placeholder={t("enter_your_hba1c")}
                     required
                   />
                   <span className="text-sm text-gray-500">%</span>
@@ -238,7 +244,7 @@ export default function ProfileForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg bg-white">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Systolic Blood Pressure
+                  {t("blood_pressure_systolic")}
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -248,7 +254,7 @@ export default function ProfileForm() {
                     onChange={(e) =>
                       handleInputChange("blood_pressure_high", e.target.value)
                     }
-                    placeholder="Enter systolic blood pressure"
+                    placeholder={t("enter_your_blood_pressure_systolic")}
                     required
                   />
                   <span className="text-sm text-gray-500">mmHg</span>
@@ -257,7 +263,7 @@ export default function ProfileForm() {
 
               <div className="p-4 border rounded-lg bg-white">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Diastolic Blood Pressure
+                  {t("blood_pressure_diastolic")}
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -267,7 +273,7 @@ export default function ProfileForm() {
                     onChange={(e) =>
                       handleInputChange("blood_pressure_low", e.target.value)
                     }
-                    placeholder="Enter diastolic blood pressure"
+                    placeholder={t("enter_your_blood_pressure_diastolic")}
                     required
                   />
                   <span className="text-sm text-gray-500">mmHg</span>
@@ -279,10 +285,12 @@ export default function ProfileForm() {
 
         {/* Pregnancy Information */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Pregnancy Information</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {t("pregnancy_information")}
+          </h2>
           <div className="p-4 border rounded-lg bg-white">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Gestational Age (weeks)
+              {t("gestational_age")} ({t("weeks")})
             </label>
             <Input
               type="number"
@@ -291,7 +299,7 @@ export default function ProfileForm() {
               onChange={(e) =>
                 handleInputChange("gestational_age", e.target.value)
               }
-              placeholder="Enter gestational age"
+              placeholder={t("enter_your_gestational_age")}
               required
             />
           </div>
@@ -299,10 +307,10 @@ export default function ProfileForm() {
 
         {/* Exercise Level */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Exercise Level</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("exercise_level")}</h2>
           <div className="p-4 border rounded-lg bg-white">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Exercise Frequency
+              {t("exercise_frequency")}
             </label>
             <Select
               name="exercise_level"
@@ -327,7 +335,9 @@ export default function ProfileForm() {
 
         {/* Conditions Section */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Basic Conditions</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {t("basic_conditions")}
+          </h2>
           <div className="grid gap-4">
             {conditions.map((condition) => {
               const isSelected = selectedConditions.some(
@@ -389,7 +399,7 @@ export default function ProfileForm() {
 
         {/* Complications Section */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Complications</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("complications")}</h2>
           <div className="grid gap-4">
             {complications.map((complication) => (
               <div
@@ -413,24 +423,24 @@ export default function ProfileForm() {
 
         {/* Prescription */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Prescription</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("prescription")}</h2>
           <div className="p-4 border rounded-lg bg-white">
             <Input
               type="text"
               name="prescription"
-              placeholder="Enter prescription"
+              placeholder={t("enter_your_prescription")}
             />
           </div>
         </div>
 
         {/* Dietary Advice */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Dietary Advice</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("dietary_advice")}</h2>
           <div className="p-4 border rounded-lg bg-white">
             <Input
               type="text"
               name="dietary_advice"
-              placeholder="Enter dietary advice"
+              placeholder={t("enter_your_dietary_advice")}
             />
           </div>
         </div>
@@ -443,7 +453,7 @@ export default function ProfileForm() {
 
         <div className="flex gap-4 mt-6">
           <Button type="submit" className="ml-auto">
-            Save Profile
+            {t("save_profile")}
           </Button>
         </div>
       </form>

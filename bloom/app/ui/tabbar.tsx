@@ -6,6 +6,7 @@ import clsx from "clsx";
 import Image from "next/image";
 import { useState } from "react";
 import { AIChatModal } from "@/app/ui/chat/ai-chat-modal";
+import { useTranslations } from "next-intl";
 
 interface TabItem {
   label: string;
@@ -14,37 +15,36 @@ interface TabItem {
   icon_selected: string;
 }
 
-const tabs: TabItem[] = [
-  {
-    label: "home",
-    href: "/dashboard",
-    icon: "/tabbar/tabbar_home.png",
-    icon_selected: "/tabbar/tabbar_home_selected.png",
-  },
-  {
-    label: "nutrition",
-    href: "/dashboard/nutrition",
-    icon: "/tabbar/tabbar_nutrition.png",
-    icon_selected: "/tabbar/tabbar_nutrition_selected.png",
-  },
-  {
-    label: "exercise",
-    href: "/dashboard/exercise",
-    icon: "/tabbar/tabbar_exercise.png",
-    icon_selected: "/tabbar/tabbar_exercise_selected.png",
-  },
-  {
-    label: "profile",
-    href: "/dashboard/profile",
-    icon: "/tabbar/tabbar_profile.png",
-    icon_selected: "/tabbar/tabbar_profile_selected.png",
-  },
-];
-
 export function TabBar() {
   const pathname = usePathname();
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
-
+  const t = useTranslations("dashboard");
+  const tabs: TabItem[] = [
+    {
+      label: t("home"),
+      href: "/dashboard",
+      icon: "/tabbar/tabbar_home.png",
+      icon_selected: "/tabbar/tabbar_home_selected.png",
+    },
+    {
+      label: t("nutrition"),
+      href: "/dashboard/nutrition",
+      icon: "/tabbar/tabbar_nutrition.png",
+      icon_selected: "/tabbar/tabbar_nutrition_selected.png",
+    },
+    {
+      label: t("exercise"),
+      href: "/dashboard/exercise",
+      icon: "/tabbar/tabbar_exercise.png",
+      icon_selected: "/tabbar/tabbar_exercise_selected.png",
+    },
+    {
+      label: t("profile"),
+      href: "/dashboard/profile",
+      icon: "/tabbar/tabbar_profile.png",
+      icon_selected: "/tabbar/tabbar_profile_selected.png",
+    },
+  ];
   const leftTabs = tabs.slice(0, 2);
   const rightTabs = tabs.slice(2);
 

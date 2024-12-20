@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 // import { encryptPassword } from "@/lib/crypto";
 
 const formSchema = z
@@ -36,6 +37,7 @@ const formSchema = z
   });
 
 export default function SignUpForm() {
+  const t = useTranslations("common");
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +57,6 @@ export default function SignUpForm() {
 
       // 加密密码
       // const encryptedPassword = await encryptPassword(values.password);
-
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
         {
@@ -77,8 +78,8 @@ export default function SignUpForm() {
       }
 
       toast({
-        title: "Success",
-        description: "Account created successfully",
+        title: t("success"),
+        description: t("account_created_successfully"),
       });
 
       // after registration, redirect to login page
@@ -87,9 +88,11 @@ export default function SignUpForm() {
       console.error("Registration error:", error);
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t("error"),
         description:
-          error instanceof Error ? error.message : "Failed to create account",
+          error instanceof Error
+            ? error.message
+            : t("failed_to_create_account"),
       });
     } finally {
       setIsLoading(false);
@@ -102,7 +105,7 @@ export default function SignUpForm() {
         <Link href="/">
           <ArrowLeft className="h-6 w-6" />
         </Link>
-        <h1 className="text-2xl font-semibold">Sign Up</h1>
+        <h1 className="text-2xl font-semibold">{t("signup")}</h1>
       </div>
 
       <Form {...form}>
@@ -116,9 +119,9 @@ export default function SignUpForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t("email")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Email" type="email" {...field} />
+                  <Input placeholder={t("email")} type="email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -129,10 +132,14 @@ export default function SignUpForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t("password")}</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input type="password" placeholder="Password" {...field} />
+                    <Input
+                      type="password"
+                      placeholder={t("password")}
+                      {...field}
+                    />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -144,12 +151,12 @@ export default function SignUpForm() {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel>{t("confirm_password")}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       type="password"
-                      placeholder="Confirm Password"
+                      placeholder={t("confirm_password")}
                       {...field}
                     />
                   </div>
@@ -159,15 +166,15 @@ export default function SignUpForm() {
             )}
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Sign Up"}
+            {isLoading ? t("creating_account") : t("signup")}
           </Button>
         </form>
       </Form>
 
       <div className="text-center text-sm text-gray-500">
-        Already have an account?{" "}
+        {t("already_have_an_account")}
         <Link href="/login" className="text-primary hover:underline">
-          Log in
+          {t("login")}
         </Link>
       </div>
     </div>
