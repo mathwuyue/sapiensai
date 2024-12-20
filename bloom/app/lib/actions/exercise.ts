@@ -88,7 +88,6 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
         message: "Failed to create glucose readings"
           };
     }
-    
     return { 
       message: "Success",
       data:data,
@@ -104,38 +103,38 @@ export async function createExerciseRecord(prevState: State, formData: FormData)
 
 
 
-export async function updateExerciseRecord(
-  id: string,
-  summary: string,
-  advice: string
-) {
-  try {
-    const session = await auth();
-    const response = await fetch(`${URL}/exercise/${id}/feedback`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        "Authorization": `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify({
-        summary: summary,
-        advice: advice
-      })
-    });
+// export async function updateExerciseRecord(
+//   id: string,
+//   summary: string,
+//   advice: string
+// ) {
+//   try {
+//     const session = await auth();
+//     const response = await fetch(`${URL}/exercise/${id}/feedback`, {
+//       method: 'PUT',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         "Authorization": `Bearer ${session?.accessToken}`,
+//       },
+//       body: JSON.stringify({
+//         summary: summary,
+//         advice: advice
+//       })
+//     });
 
-    console.log("Response status:", response.status);
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error:", errorText);
-    }
+//     console.log("Response status:", response.status);
+//     if (!response.ok) {
+//       const errorText = await response.text();
+//       console.error("API Error:", errorText);
+//     }
 
-    revalidatePath('/dashboard/exercise');
-    return response.json();
-  } catch (error) {
-    console.error('更新失败:', error);
-    throw error;
-  }
-}
+//     revalidatePath('/dashboard/exercise');
+//     return response.json();
+//   } catch (error) {
+//     console.error('更新失败:', error);
+//     throw error;
+//   }
+// }
 
 
 export async function deleteExerciseRecord(id: number) {
@@ -158,7 +157,7 @@ export async function deleteExerciseRecord(id: number) {
     revalidatePath('/dashboard/exercise');
     return response.json();
   } catch (error) {
-    console.error('删除失败:', error);
+    console.error('Delete failed:', error);
     throw error;
   }
 }
@@ -188,7 +187,7 @@ export async function deleteExerciseRecord(id: number) {
 // }
 
 export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
-  let url = `${URL}/exercise`;
+  const url = `${URL}/exercise`;
   //let url = `${LOCAL_API_URL}/v1/emma/exercise`; // 移除 /api 前缀
 
   const session = await auth();
@@ -220,9 +219,8 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
   // }
   
   try {
-    console.log('Fetching URL:', url); // 添加日志
     
-    const response = await fetch(url, {
+    const response = await fetch(`${URL}/exercise`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -230,16 +228,16 @@ export async function fetchExerciseRecords(startDate?: Date, endDate?: Date) {
       }
     });
     
-    console.log('Response status:', response.status); // 添加日志
+    console.log('Response status:', response.status); 
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API Error:', errorText); // 添加错误日志
+      console.error('API Error:', errorText); 
       throw new Error(`Failed to fetch exercises: ${response.status} ${errorText}`);
     }
     
     const data = await response.json();
-    console.log('Response data:', data); // 添加日志
+    console.log('Response data:', data); 
     return data.map((record: any) => {
       let emmaData = { summary: null, advice: null };
       if (record.emma) {

@@ -34,7 +34,9 @@ export function EditGlucoseModal({ isOpen, onClose, onSave, initialData }: EditG
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent
+        className="w-[90%] max-w-[400px] md:w-full p-4 md:p-6" 
+        aria-describedby="dialog-description"      >
         <DialogHeader>
           <DialogTitle>Edit Glucose Reading</DialogTitle>
         </DialogHeader>

@@ -18,8 +18,8 @@ import {
 import { Glucose } from "@/app/lib/definitions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { fetchGlucoseReadings,deleteGlucoseReading } from "@/app/lib/actions/glucose";
-import { useEffect, useState, } from "react";
+import { fetchGlucoseReadings} from "@/app/lib/actions/glucose";
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import React from "react";  
 
@@ -75,6 +75,8 @@ const chartConfig = {
 export default function GlucoseCard() {
   const [glucoseData, setGlucoseData] = useState<FormattedGlucose[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+
 
   useEffect(() => {
   

@@ -47,6 +47,10 @@ export default function GlucoseList() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingGlucose, setEditingGlucose] = useState<FormattedGlucose | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  // const [page, setPage] = useState(1);
+
+  // const itemsPerPage = 3;
+
   useEffect(() => {
     // if (dataFetchedRef.current) return;
     // dataFetchedRef.current = true;
@@ -69,7 +73,7 @@ export default function GlucoseList() {
         // 按日期和类型排序
         const sortedData = formattedData.sort((a, b) => {
             // 首先按日期排序
-            const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+            const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
             if (dateCompare === 0) {
               return Number(a.type) - Number(b.type);
             }
@@ -93,6 +97,7 @@ export default function GlucoseList() {
 
     
   }, []);
+  
 
 
 
@@ -156,11 +161,16 @@ const handleEdit = async (data: { value: number; type: number; date: string }) =
       
       setEditingGlucose(null);
     } catch (error) {
-      console.error('更新失败:', error);
+      console.error('Update failed:', error);
     } finally {
       setIsUpdating(false);
     }
   };
+
+  // const paginatedData = glucoseData?.slice(
+  //   (page - 1) * itemsPerPage,
+  //   page * itemsPerPage
+  // );
 
   if (isLoading || glucoseData === null) {
     return (
@@ -249,6 +259,31 @@ const handleEdit = async (data: { value: number; type: number; date: string }) =
       <Link className="w-full" href="/dashboard/glucose/create">
           <Button className="w-full">Add Glucose Reading</Button>
         </Link>
+        <div className="flex items-center justify-between border-t pt-4">
+        
+
+
+    </div>
+    
+
+    {/* <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(p => p + 1)}
+            disabled={page * itemsPerPage >= paginatedData?.length}
+          >
+            Next
+          </Button>
+          </div> */}
       </CardFooter>
     </Card>
   );
