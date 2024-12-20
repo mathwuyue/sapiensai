@@ -11,7 +11,7 @@ import redis
 from typing import Dict, Any, AsyncGenerator
 import uuid
 import time
-from prompt import emma_chat, emma_future, emma_fitness, emma_nutrition
+from prompt import emma_chat, emma_future, emma_fitness, emma_nutrition, emma_format_chat
 from nutrition.emma import get_user_info, get_user_preference_summary, get_glu_summary, get_products, calculate_nutrition_per_day
 from utils import extract_json_from_text
 
@@ -76,6 +76,7 @@ async def workflow(query: Query, config: str, websocket) -> AsyncGenerator[Dict[
     elif int(choice.get('choice')) == 2:
         print('food & nutrition')
         emma_nutrition_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
+        emma_format_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))
         context = {
             'userinfo': await get_user_info(config['user_id'], is_formated=True),
             'food_preference': await get_user_preference_summary(config['user_id']),
@@ -83,11 +84,11 @@ async def workflow(query: Query, config: str, websocket) -> AsyncGenerator[Dict[
             'meal': calculate_nutrition_per_day(config['user_id'], datetime.datetime.now()),
             'products': get_products()
         }
-        async for chunk in emma_nutrition_agent.act(question, 0, 'default', emma_nutrition, context, stream=False):
+        async for chunk in emma_nutrition_agent.act(question, 0, 'default', emma_nutrition, context):
             response = chunk.choices[0].message.content
             resp_json = extract_json_from_text(response)
-            chunk.choices[0].message.content = resp_json['message']
-            yield chunk
+            async for format_chunk in emma_format_agent.act(question, 0, 'default', emma_format_chat, {'content': resp_json['message']}, stream=True):
+                yield format_chunk
     elif int(choice.get('choice')) == 3:
         print('health')
         emma_future_agent = ChatAgent(AgentConfig(user_id=config['user_id'], session_id=config['session_id']))

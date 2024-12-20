@@ -506,7 +506,7 @@ def emma_nutrition(query, userinfo, food_preference, glu_summary, meal, products
     Think step by step. 
     Evaluate your solution at the end of the process. Make sure you follow all the instructions.
     If you are not sure about the answer, say you do not know the answer and ask the user to refer to professionals. This is very important to the user.
-    Give the final answer in the language as the query and in the json format: \n
+    Always give the final answer in English and in the json format: \n
     ```json
     { "message": "string" }
     ```
@@ -585,6 +585,18 @@ def user_preference_summary(food_preference):
     {{ food_preference }}
     ```
     Summarize the user's food preference in a concise language no more than 100 words. \n
+    '''
+    
+    
+@prompt
+def emma_format_chat(query, content):
+    '''
+    Given the user's query and the content of a response. Rewrite the response following:
+    1. If the response is Json format likes ```json {'message': 'string'}```, you should convert the response to plain text. \n
+    2. Check the user's query, make sure the response is in the same language as the query. \n
+    3. When translate the response, you should keep the content, the meaning, the writing style of the response, and be aware to make the translation sounds comfort, cherish and concerning. This is very important to the user \n
+    4. If the response fulfills the requirements, you should output the response. \n
+    5. ONLY output the response. \n
     '''
 
 
