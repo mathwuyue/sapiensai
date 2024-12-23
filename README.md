@@ -18,10 +18,10 @@ bloom contains both the frontend and backend src files of the App. Please refer 
 
 # Acknowlegement (in alphabetical order)
 - Claire Wu: "Exercise" feature of the App
-- He Yi: Meal and nutrition reconigtion
 - Richard Zhang: For major Apps development works in bloom
 - Shufan Jiang: Meal and exercise reconigtion and LLM prompt tests
 - Siyao Zhang: Advice and material preparation of medical related issues
 - Wenxuan Fan: Medical model development and advice in nutrition and writing examples
+- Yi He: Meal and nutrition reconigtion
 - Yue Wu: Core LLM development, major works of emma
 - Yutong Guo: Original idea, design and framework

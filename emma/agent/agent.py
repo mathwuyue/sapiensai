@@ -86,7 +86,11 @@ class Agent:
 class ChatAgent(Agent):
     async def act(self, query: str, state: int, agent_type: str = 'default', template=None, context: dict = None, temperature=0.85, stream=False) -> AsyncGenerator[Dict[str, Any], None]:
         # get UserHistory
-        history = get_history(self.config.user_id, self.config.session_id)['history']
+        history = get_history(self.config.user_id, self.config.session_id)
+        if history:
+            history = history['history']
+        else:
+            history =[]
         # store user query in UserHistory
         self._store_history('user', query, state)
         # create query
