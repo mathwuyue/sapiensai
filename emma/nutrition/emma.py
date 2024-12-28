@@ -27,7 +27,7 @@ async def analyze_food(user_id, image_base64: str, meal_type: int) -> list[Nutri
     products = get_products()
     userinfo = await get_user_info(user_id, is_formated=False)
     if type(userinfo) is str:
-        userinfo = {'pre_weight': 58, 'is_twin': False, 'height': 1.75, 'ga': 12}
+        userinfo = {'pre_weight': 59.3, 'is_twin': False, 'height': 1.77, 'ga': 12}
     bmi = userinfo['pre_weight'] / (userinfo['height'] ** 2)
     guidelines = {'calories': cal_calories_gdm(bmi, userinfo['pre_weight'], userinfo['is_twin'], userinfo['ga']), 'protein': cal_protein(userinfo['ga'])}
     prompt = [

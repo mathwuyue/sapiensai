@@ -51,7 +51,7 @@ async def llm(query: str, model: str = os.getenv('MODEL'), sys_msg=None, stream=
             response = await acompletion(
                 model=f'hosted_vllm/{model}',
                 api_key=api_key['vllm'],
-                api_base='http://ehr.stalent.cn:53698/v1',
+                api_base=os.getenv('VLLM_API_BASE'),
                 messages=messages,
                 temperature=temperature,
                 stream=stream,
