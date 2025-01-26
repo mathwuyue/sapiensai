@@ -1,12 +1,15 @@
+import logging
 import sys
-from fastapi import FastAPI
+from logging.config import dictConfig
+from logging.handlers import RotatingFileHandler
+
 import uvicorn
+import uvicorn.logging
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 import serve
 from serve import *
-import logging
-from logging.handlers import RotatingFileHandler
-from logging.config import dictConfig
-import uvicorn.logging
 
 # # Configure logging
 # logging.basicConfig(
@@ -29,13 +32,13 @@ LOGGING_CONFIG = {
         },
         "access": {
             "()": "uvicorn.logging.AccessFormatter",
-            "fmt": '%(levelprefix)s %(asctime)s [%(name)s] '
-                   '%(client_addr)s - "%(request_line)s" %(status_code)s',
+            "fmt": "%(levelprefix)s %(asctime)s [%(name)s] "
+            '%(client_addr)s - "%(request_line)s" %(status_code)s',
         },
         "detailed": {
             "fmt": "%(asctime)s - %(name)s - %(levelname)s"
-                      "[%(filename)s:%(lineno)d] - %(message)s"
-        }
+            "[%(filename)s:%(lineno)d] - %(message)s"
+        },
     },
     "handlers": {
         "default": {
@@ -86,19 +89,26 @@ LOGGING_CONFIG = {
 def configure_logging():
     # Apply the logging configuration
     dictConfig(LOGGING_CONFIG)
-    
+
     # Optional: Configure root logger
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler('../logs/perf.log'),
+            logging.FileHandler("../logs/perf.log"),
             # logging.StreamHandler(sys.stdout)
-        ]
+        ],
     )
 
 
-app = FastAPI(title="Capybara API Server")
+app = FastAPI(title="Emma Server")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # load all modules in serve/webapi.py
 for mod in dir(serve):

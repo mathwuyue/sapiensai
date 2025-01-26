@@ -1,10 +1,11 @@
-import os
 import datetime
-from peewee import *
-from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField, ArrayField
-from dotenv import load_dotenv
-from utils import make_table_name
+import os
 
+from dotenv import load_dotenv
+from peewee import *
+from playhouse.postgres_ext import ArrayField, BinaryJSONField, PostgresqlExtDatabase
+
+from utils import make_table_name
 
 load_dotenv()
 
@@ -13,7 +14,7 @@ db = PostgresqlExtDatabase(
     user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASSWORD"),
     host=os.getenv("DB_HOST", "localhost"),
-    port=os.getenv("DB_PORT", 19032)
+    port=os.getenv("DB_PORT", 19032),
 )
 
 
@@ -29,7 +30,7 @@ class User(BaseModel):
     user_meta = BinaryJSONField(null=True)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField()
-    
+
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()
         return super().save(*args, **kwargs)
@@ -44,8 +45,8 @@ def get_user(username):
         return User.get(User.username == username)
     except User.DoesNotExist:
         return None
-    
-    
+
+
 class UploadFile(BaseModel):
     id = AutoField(primary_key=True)
     doc_id = CharField(unique=True)
@@ -56,19 +57,17 @@ class UploadFile(BaseModel):
     type = CharField(max_length=255)
     auth = ArrayField(CharField, null=True)
     meta = BinaryJSONField(null=True)
-    status = CharField(max_length=255, default='waiting')
+    status = CharField(max_length=255, default="waiting")
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField()
-    
+
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()
         return super().save(*args, **kwargs)
 
     class Meta:
-        indexes = (
-            (('filename', 'app_id'), False),
-        )
-        
+        indexes = ((("filename", "app_id"), False),)
+
 
 class Product(BaseModel):
     id = AutoField(primary_key=True)
@@ -78,12 +77,21 @@ class Product(BaseModel):
     brief = CharField(max_length=512)
     description = TextField()
     meta = BinaryJSONField(null=True)
-    
+
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()
         return super().save(*args, **kwargs)
-    
-    
+
+
+# Create table if it doesn't exist
+class ChatMission(BaseModel):
+    id = AutoField(primary_key=True)
+    user_id = CharField(max_length=255, index=True)
+    mission_jwt = CharField(index=True)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    is_deleted = BooleanField(default=False)
+
+
 # if __name__ == '__main__':
 #     from utils import autodiscover_models
 #     autodiscover_models(database=db)

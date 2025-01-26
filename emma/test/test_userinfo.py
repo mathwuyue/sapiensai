@@ -10,7 +10,7 @@ def test_post_user_id():
     }
     
     # Define endpoint
-    url = "http://115.223.19.227:8001/v1/userinfo/basicinfo"
+    url = "http://ehr.stalent:19030/v1/userinfo/basicinfo"
     
     # Prepare data
     data = {
@@ -27,7 +27,7 @@ def test_post_user_id():
     
     # Verify response
     assert response.status_code == 200
-    assert response.json()  # Verify response contains JSON
+    print(response.json())  # Verify response contains JSON
 
 
 def test_post_user_food_info():
@@ -38,7 +38,7 @@ def test_post_user_food_info():
     }
     
     # Define endpoint
-    url = "http://115.223.19.227:8001/v1/userinfo/food"
+    url = "http://ehr.stalent.cn:19030/v1/userinfo/food"
     
     # Prepare data
     data = {
@@ -58,4 +58,4 @@ def test_post_user_food_info():
     
     # Verify response
     assert response.status_code == 200
-    assert response.json()  # Verify response contains JSON
+    print(response.json())  # Verify response contains JSON

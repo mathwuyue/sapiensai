@@ -3,6 +3,8 @@ from pydantic import computed_field
 from functools import lru_cache
 from pathlib import Path
 from typing import List
+
+
 class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     ENVIRONMENT: str = "development"
