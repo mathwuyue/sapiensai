@@ -1,9 +1,10 @@
-from pydantic import BaseModel, Field, BeforeValidator
-from typing import List, Dict, Any, Optional, Annotated
 import uuid
+from typing import Annotated, Any, Dict, List, Optional
 
+from pydantic import BaseModel, BeforeValidator, Field
 
 UserId = Annotated[int, BeforeValidator(lambda v: str(v))]
+
 
 class NutritionMacro(BaseModel):
     calories: float
@@ -23,23 +24,27 @@ class NutritionMineral(BaseModel):
     iron: float
     zinc: float
     iodine: float
-    
-    
+
+
 class DietarySummary(BaseModel):
-    comment: Optional[str] = Field(default='', description="Comment for dietary")
-    advice: Optional[str] = Field(default='', description="Advice for dietary")
-    tables: Optional[List[Dict[str, Any]]] = Field(default=[], description="Tables for dietary")
-    charts: Optional[List[Dict[str, Any]]] = Field(default=[], description="Charts for dietary")
+    comment: Optional[str] = Field(default="", description="Comment for dietary")
+    advice: Optional[str] = Field(default="", description="Advice for dietary")
+    tables: Optional[List[Dict[str, Any]]] = Field(
+        default=[], description="Tables for dietary"
+    )
+    charts: Optional[List[Dict[str, Any]]] = Field(
+        default=[], description="Charts for dietary"
+    )
 
 
 class DietaryData(BaseModel):
     day: int
     meals: List[str]
-    
-    
+
+
 class EmmaComment(BaseModel):
     summary: str
-    advice: str = ''
+    advice: str = ""
 
 
 class UserBasicInfo(BaseModel):
@@ -59,9 +64,11 @@ class UserBasicInfo(BaseModel):
     complications: str
     execise: int
     scripts: Optional[str] = Field(default=None, description="Prescribed scripts")
-    advice: Optional[str] = Field(default=None, description="Doctor's advice for dietary")
-  
-    
+    advice: Optional[str] = Field(
+        default=None, description="Doctor's advice for dietary"
+    )
+
+
 class UserPreferenceData(BaseModel):
     appetite: int = 0
     pork: int = 0
@@ -82,5 +89,5 @@ class UserPreferenceData(BaseModel):
     noodles: int = 0
     bread: int = 0
     nuts: int = 0
-    prefer: str = ''
-    dislike: str = ''
+    prefer: str = ""
+    dislike: str = ""
